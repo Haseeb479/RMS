@@ -1,0 +1,16 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5433,
+            "driver": "PostgreSQL",
+            "name": "RMS",
+            "database": "RMS",
+            "username": "postgres",
+            "password": "9889",
+            "connectionTimeout": 30
+        }
+    ]
+}
