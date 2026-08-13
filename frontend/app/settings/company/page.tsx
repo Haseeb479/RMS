@@ -8,7 +8,7 @@ import Sidebar from '@/components/sidebar';
 
 export default function CompanySettingsPage() {
   const { isLoggedIn } = useAuth();
-  const { company, loading, updateCompany } = useCompany();
+  const { company, updateCompany } = useCompany();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -63,10 +63,10 @@ export default function CompanySettingsPage() {
     }
   };
 
-  if (!isLoggedIn) return <div>Loading...</div>;
+  if (!isLoggedIn) return <div style={{ background: '#090d16', minHeight: '100vh', color: '#94a3b8', padding: '32px' }}>Loading...</div>;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#fafaf8' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#090d16', color: '#f8fafc' }}>
       {/* Sidebar */}
       <Sidebar />
 
@@ -74,8 +74,8 @@ export default function CompanySettingsPage() {
       <div style={{ marginLeft: '240px', flex: 1, width: '100%' }}>
         {/* Top Bar */}
         <div style={{
-          background: 'white',
-          borderBottom: '1px solid #e5e5e3',
+          background: '#0f172a',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           padding: '16px 32px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -84,24 +84,23 @@ export default function CompanySettingsPage() {
           top: 0,
           zIndex: 50,
         }}>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', color: '#1a1a1a' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: '600', color: '#f8fafc' }}>
             Settings
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '32px',
               height: '32px',
-              background: '#e5e5e3',
-              borderRadius: '6px',
+              background: '#1e293b',
+              borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '14px',
-              fontWeight: '600',
             }}>
               👤
             </div>
-            <span style={{ fontSize: '13px', color: '#666' }}>Admin</span>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Admin</span>
           </div>
         </div>
 
@@ -112,32 +111,33 @@ export default function CompanySettingsPage() {
             <h2 style={{
               fontSize: '28px',
               fontWeight: '700',
-              color: '#1a1a1a',
+              color: '#f8fafc',
               marginBottom: '8px',
             }}>
               Company Settings
             </h2>
-            <p style={{ fontSize: '14px', color: '#999' }}>
+            <p style={{ fontSize: '14px', color: '#94a3b8' }}>
               Manage your company information
             </p>
           </div>
 
           {/* Settings Card */}
           <div style={{
-            background: 'white',
-            border: '1px solid #e5e5e3',
-            borderRadius: '8px',
+            background: '#0f172a',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px',
             maxWidth: '600px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
           }}>
             {/* Card Header */}
             <div style={{
               padding: '20px 24px',
-              borderBottom: '1px solid #e5e5e3',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             }}>
               <h3 style={{
                 fontSize: '16px',
                 fontWeight: '600',
-                color: '#1a1a1a',
+                color: '#f8fafc',
               }}>
                 Company Profile
               </h3>
@@ -148,13 +148,13 @@ export default function CompanySettingsPage() {
               {/* Success Message */}
               {success && (
                 <div style={{
-                  background: '#ecfdf5',
-                  border: '1px solid #a7f3d0',
-                  borderRadius: '6px',
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '8px',
                   padding: '12px 16px',
                   marginBottom: '20px',
                   fontSize: '13px',
-                  color: '#047857',
+                  color: '#34d399',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -166,13 +166,13 @@ export default function CompanySettingsPage() {
               {/* Error Message */}
               {error && (
                 <div style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: '6px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
                   padding: '12px 16px',
                   marginBottom: '20px',
                   fontSize: '13px',
-                  color: '#991b1b',
+                  color: '#f87171',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -188,7 +188,7 @@ export default function CompanySettingsPage() {
                   fontWeight: '500',
                   display: 'block',
                   marginBottom: '8px',
-                  color: '#1a1a1a',
+                  color: '#cbd5e1',
                 }}>
                   Company Name
                 </label>
@@ -200,11 +200,13 @@ export default function CompanySettingsPage() {
                   placeholder="Enter company name"
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e5e5e3',
-                    borderRadius: '6px',
+                    padding: '10px 14px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
                     fontSize: '14px',
-                    fontFamily: 'inherit',
+                    background: '#1e293b',
+                    color: '#f8fafc',
+                    boxSizing: 'border-box',
                   }}
                   required
                 />
@@ -217,7 +219,7 @@ export default function CompanySettingsPage() {
                   fontWeight: '500',
                   display: 'block',
                   marginBottom: '8px',
-                  color: '#1a1a1a',
+                  color: '#cbd5e1',
                 }}>
                   Website (Optional)
                 </label>
@@ -229,11 +231,13 @@ export default function CompanySettingsPage() {
                   placeholder="https://mycompany.com"
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e5e5e3',
-                    borderRadius: '6px',
+                    padding: '10px 14px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
                     fontSize: '14px',
-                    fontFamily: 'inherit',
+                    background: '#1e293b',
+                    color: '#f8fafc',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -245,7 +249,7 @@ export default function CompanySettingsPage() {
                   fontWeight: '500',
                   display: 'block',
                   marginBottom: '8px',
-                  color: '#1a1a1a',
+                  color: '#cbd5e1',
                 }}>
                   Description (Optional)
                 </label>
@@ -256,18 +260,20 @@ export default function CompanySettingsPage() {
                   placeholder="Tell us about your company..."
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    border: '1px solid #e5e5e3',
-                    borderRadius: '6px',
+                    padding: '10px 14px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
                     fontSize: '14px',
-                    fontFamily: 'inherit',
+                    background: '#1e293b',
+                    color: '#f8fafc',
                     minHeight: '120px',
                     resize: 'vertical',
+                    boxSizing: 'border-box',
                   }}
                 />
                 <p style={{
                   fontSize: '12px',
-                  color: '#999',
+                  color: '#64748b',
                   marginTop: '6px',
                 }}>
                   {formData.description.length}/500 characters
@@ -280,15 +286,16 @@ export default function CompanySettingsPage() {
                 disabled={saving}
                 style={{
                   width: '100%',
-                  padding: '10px 16px',
-                  background: '#3b82f6',
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500',
+                  fontWeight: '600',
                   opacity: saving ? 0.6 : 1,
+                  boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -300,17 +307,17 @@ export default function CompanySettingsPage() {
           {/* Company Info Card */}
           {company && (
             <div style={{
-              background: '#eff6ff',
-              border: '1px solid #bfdbfe',
-              borderRadius: '8px',
-              padding: '16px',
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: '12px',
+              padding: '20px',
               marginTop: '24px',
               maxWidth: '600px',
             }}>
               <h4 style={{
                 fontSize: '14px',
                 fontWeight: '600',
-                color: '#1e40af',
+                color: '#a5b4fc',
                 marginBottom: '12px',
               }}>
                 ℹ️ Company Information
@@ -322,14 +329,14 @@ export default function CompanySettingsPage() {
                 fontSize: '13px',
               }}>
                 <div>
-                  <p style={{ color: '#999', marginBottom: '4px' }}>Company ID</p>
-                  <p style={{ color: '#1a1a1a', fontFamily: 'monospace', fontSize: '12px' }}>
+                  <p style={{ color: '#64748b', marginBottom: '4px' }}>Company ID</p>
+                  <p style={{ color: '#f8fafc', fontFamily: 'monospace', fontSize: '12px' }}>
                     {company.id.substring(0, 8)}...
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: '#999', marginBottom: '4px' }}>Created</p>
-                  <p style={{ color: '#1a1a1a' }}>
+                  <p style={{ color: '#64748b', marginBottom: '4px' }}>Created</p>
+                  <p style={{ color: '#f8fafc' }}>
                     {new Date(company.createdAt).toLocaleDateString()}
                   </p>
                 </div>

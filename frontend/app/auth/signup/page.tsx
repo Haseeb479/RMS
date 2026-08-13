@@ -33,7 +33,8 @@ export default function SignupPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#fafaf8',
+      background: '#090d16',
+      color: '#f8fafc',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -46,52 +47,55 @@ export default function SignupPage() {
           marginBottom: '32px',
         }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            background: '#3b82f6',
-            borderRadius: '8px',
+            width: '52px',
+            height: '52px',
+            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+            borderRadius: '12px',
             margin: '0 auto 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
-            fontWeight: '700',
-            fontSize: '20px',
+            fontWeight: '800',
+            fontSize: '22px',
+            boxShadow: '0 8px 24px rgba(99, 102, 241, 0.4)',
           }}>
             RMS
           </div>
           <h1 style={{
-            fontSize: '24px',
+            fontSize: '26px',
             fontWeight: '700',
-            color: '#1a1a1a',
+            color: '#f8fafc',
             marginBottom: '8px',
+            letterSpacing: '-0.5px',
           }}>
-            Create account
+            Create an Account
           </h1>
           <p style={{
             fontSize: '14px',
-            color: '#999',
+            color: '#94a3b8',
           }}>
-            Get started in seconds
+            Get started in seconds with RMS
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={{
-          background: 'white',
-          border: '1px solid #e5e5e3',
-          borderRadius: '8px',
-          padding: '24px',
-          marginBottom: '16px',
+          background: '#0f172a',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          padding: '28px',
+          marginBottom: '20px',
+          boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
         }}>
           {/* Company Name */}
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <label style={{
               fontSize: '13px',
               fontWeight: '500',
               display: 'block',
               marginBottom: '6px',
-              color: '#1a1a1a',
+              color: '#cbd5e1',
             }}>
               Company Name
             </label>
@@ -102,26 +106,28 @@ export default function SignupPage() {
               placeholder="Acme Inc"
               style={{
                 width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e5e5e3',
-                borderRadius: '6px',
+                padding: '11px 14px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: 'inherit',
+                background: '#1e293b',
+                color: '#f8fafc',
+                boxSizing: 'border-box',
               }}
               required
             />
           </div>
 
           {/* Email */}
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <label style={{
               fontSize: '13px',
               fontWeight: '500',
               display: 'block',
               marginBottom: '6px',
-              color: '#1a1a1a',
+              color: '#cbd5e1',
             }}>
-              Email
+              Email Address
             </label>
             <input
               type="email"
@@ -130,24 +136,26 @@ export default function SignupPage() {
               placeholder="you@example.com"
               style={{
                 width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e5e5e3',
-                borderRadius: '6px',
+                padding: '11px 14px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '8px',
                 fontSize: '14px',
-                fontFamily: 'inherit',
+                background: '#1e293b',
+                color: '#f8fafc',
+                boxSizing: 'border-box',
               }}
               required
             />
           </div>
 
           {/* Password */}
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <label style={{
               fontSize: '13px',
               fontWeight: '500',
               display: 'block',
               marginBottom: '6px',
-              color: '#1a1a1a',
+              color: '#cbd5e1',
             }}>
               Password
             </label>
@@ -159,11 +167,13 @@ export default function SignupPage() {
                 placeholder="••••••••"
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #e5e5e3',
-                  borderRadius: '6px',
+                  padding: '11px 14px',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '8px',
                   fontSize: '14px',
-                  fontFamily: 'inherit',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  boxSizing: 'border-box',
                 }}
                 required
               />
@@ -178,7 +188,7 @@ export default function SignupPage() {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#999',
+                  color: '#94a3b8',
                   fontSize: '16px',
                 }}
               >
@@ -190,13 +200,13 @@ export default function SignupPage() {
           {/* Error */}
           {error && (
             <div style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '6px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '8px',
               padding: '12px',
               fontSize: '13px',
-              color: '#991b1b',
-              marginBottom: '16px',
+              color: '#f87171',
+              marginBottom: '20px',
             }}>
               ⚠️ {error}
             </div>
@@ -208,15 +218,17 @@ export default function SignupPage() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '10px 16px',
-              background: '#3b82f6',
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
+              fontWeight: '600',
               opacity: loading ? 0.6 : 1,
+              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+              transition: 'all 0.2s ease',
             }}
           >
             {loading ? 'Creating account...' : 'Create account'}
@@ -227,13 +239,13 @@ export default function SignupPage() {
         <p style={{
           textAlign: 'center',
           fontSize: '14px',
-          color: '#999',
+          color: '#94a3b8',
         }}>
           Already have an account?{' '}
           <Link href="/auth/login" style={{
-            color: '#3b82f6',
+            color: '#818cf8',
             textDecoration: 'none',
-            fontWeight: '500',
+            fontWeight: '600',
           }}>
             Sign in
           </Link>

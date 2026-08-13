@@ -7,10 +7,10 @@ import { useJobs, Job } from '@/lib/hooks/usejobs';
 import Sidebar from '@/components/sidebar';
 import Link from 'next/link';
 
-const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  draft: { bg: '#f5f5f4', color: '#78716c', label: 'Draft' },
-  published: { bg: '#ecfdf5', color: '#047857', label: 'Published' },
-  closed: { bg: '#fef2f2', color: '#991b1b', label: 'Closed' },
+const STATUS_COLORS: Record<string, { bg: string; color: string; border: string; label: string }> = {
+  draft: { bg: 'rgba(148, 163, 184, 0.15)', color: '#cbd5e1', border: 'rgba(148, 163, 184, 0.3)', label: 'Draft' },
+  published: { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: 'rgba(16, 185, 129, 0.3)', label: 'Published' },
+  closed: { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: 'rgba(239, 68, 68, 0.3)', label: 'Closed' },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -42,7 +42,7 @@ export default function JobsPage() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const { jobs, loading, error, createJob, updateJob, deleteJob, publishJob, closeJob, refetch } = useJobs(statusFilter);
+  const { jobs, loading, error, createJob, updateJob, deleteJob, publishJob, closeJob } = useJobs(statusFilter);
 
   const [showModal, setShowModal] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -56,7 +56,7 @@ export default function JobsPage() {
     if (!isLoggedIn) router.push('/auth/login');
   }, [isLoggedIn, router]);
 
-  if (!isLoggedIn) return <div>Loading...</div>;
+  if (!isLoggedIn) return <div style={{ background: '#090d16', minHeight: '100vh', color: '#94a3b8', padding: '32px' }}>Loading...</div>;
 
   const openCreate = () => {
     setEditingJob(null);
@@ -91,7 +91,7 @@ export default function JobsPage() {
       }
       setShowModal(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.error || 'Failed to save job');
+      setFormError(err.message || 'Failed to save job');
     } finally {
       setSaving(false);
     }
@@ -124,14 +124,14 @@ export default function JobsPage() {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#fafaf8' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#090d16', color: '#f8fafc' }}>
       <Sidebar />
 
       <div style={{ marginLeft: '240px', flex: 1, width: '100%' }}>
         {/* Top Bar */}
         <div style={{
-          background: 'white',
-          borderBottom: '1px solid #e5e5e3',
+          background: '#0f172a',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           padding: '16px 32px',
           display: 'flex',
           justifyContent: 'space-between',
@@ -140,21 +140,22 @@ export default function JobsPage() {
           top: 0,
           zIndex: 50,
         }}>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', color: '#1a1a1a' }}>Jobs</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '600', color: '#f8fafc' }}>Jobs</h1>
           <button
             onClick={openCreate}
             style={{
-              padding: '8px 16px',
-              background: '#3b82f6',
+              padding: '9px 18px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '500',
+              fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
             }}
           >
             + Post Job
@@ -164,10 +165,10 @@ export default function JobsPage() {
         <div style={{ padding: '32px' }}>
           {/* Header */}
           <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#1a1a1a', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#f8fafc', marginBottom: '8px', letterSpacing: '-0.5px' }}>
               Job Postings
             </h2>
-            <p style={{ fontSize: '14px', color: '#999' }}>Create and manage your open positions</p>
+            <p style={{ fontSize: '14px', color: '#94a3b8' }}>Create and manage your open positions</p>
           </div>
 
           {/* Filters */}
@@ -180,12 +181,13 @@ export default function JobsPage() {
                   padding: '6px 16px',
                   borderRadius: '20px',
                   border: '1px solid',
-                  borderColor: statusFilter === f.value ? '#3b82f6' : '#e5e5e3',
-                  background: statusFilter === f.value ? '#eff6ff' : 'white',
-                  color: statusFilter === f.value ? '#3b82f6' : '#666',
+                  borderColor: statusFilter === f.value ? '#818cf8' : 'rgba(255,255,255,0.1)',
+                  background: statusFilter === f.value ? 'rgba(99, 102, 241, 0.2)' : '#0f172a',
+                  color: statusFilter === f.value ? '#818cf8' : '#94a3b8',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: '500',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {f.label}
@@ -196,8 +198,8 @@ export default function JobsPage() {
           {/* Error */}
           {error && (
             <div style={{
-              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px',
-              padding: '12px 16px', marginBottom: '20px', color: '#991b1b', fontSize: '14px',
+              background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px',
+              padding: '12px 16px', marginBottom: '20px', color: '#f87171', fontSize: '14px',
             }}>
               ⚠️ {error}
             </div>
@@ -205,7 +207,7 @@ export default function JobsPage() {
 
           {/* Loading */}
           {loading && (
-            <div style={{ textAlign: 'center', padding: '48px', color: '#999' }}>
+            <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>
               Loading jobs...
             </div>
           )}
@@ -213,22 +215,22 @@ export default function JobsPage() {
           {/* Empty State */}
           {!loading && jobs.length === 0 && (
             <div style={{
-              background: 'white', border: '1px solid #e5e5e3', borderRadius: '8px',
+              background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px',
               padding: '64px', textAlign: 'center',
             }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a', marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#f8fafc', marginBottom: '8px' }}>
                 No jobs yet
               </h3>
-              <p style={{ fontSize: '14px', color: '#999', marginBottom: '24px' }}>
+              <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px' }}>
                 Post your first job opening to start attracting candidates.
               </p>
               <button
                 onClick={openCreate}
                 style={{
-                  padding: '10px 24px', background: '#3b82f6', color: 'white',
-                  border: 'none', borderRadius: '6px', cursor: 'pointer',
-                  fontSize: '14px', fontWeight: '500',
+                  padding: '10px 24px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white',
+                  border: 'none', borderRadius: '8px', cursor: 'pointer',
+                  fontSize: '14px', fontWeight: '600', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
                 }}
               >
                 + Post Your First Job
@@ -246,13 +248,14 @@ export default function JobsPage() {
                   <div
                     key={job.id}
                     style={{
-                      background: 'white',
-                      border: '1px solid #e5e5e3',
-                      borderRadius: '8px',
+                      background: '#0f172a',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '12px',
                       padding: '20px 24px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '16px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                     }}
                   >
                     {/* Info */}
@@ -260,20 +263,21 @@ export default function JobsPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                         <Link href={`/jobs/${job.id}`}>
                           <span style={{
-                            fontSize: '16px', fontWeight: '600', color: '#1a1a1a',
+                            fontSize: '16px', fontWeight: '600', color: '#f8fafc',
                             cursor: 'pointer', textDecoration: 'none',
                           }}>
                             {job.title}
                           </span>
                         </Link>
                         <span style={{
-                          padding: '2px 10px', borderRadius: '12px', fontSize: '11px',
+                          padding: '3px 10px', borderRadius: '12px', fontSize: '11px',
                           fontWeight: '600', background: statusStyle.bg, color: statusStyle.color,
+                          border: `1px solid ${statusStyle.border}`,
                         }}>
                           {statusStyle.label}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#999' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: '#94a3b8' }}>
                         {job.location && <span>📍 {job.location}</span>}
                         <span>💼 {TYPE_LABELS[job.type] || job.type}</span>
                         {job.salary && <span>💰 {job.salary}</span>}
@@ -289,8 +293,8 @@ export default function JobsPage() {
                           onClick={() => handlePublish(job.id)}
                           disabled={actionLoading === job.id + '-publish'}
                           style={{
-                            padding: '6px 14px', background: '#ecfdf5', color: '#047857',
-                            border: '1px solid #a7f3d0', borderRadius: '6px', cursor: 'pointer',
+                            padding: '6px 14px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399',
+                            border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', cursor: 'pointer',
                             fontSize: '12px', fontWeight: '500',
                           }}
                         >
@@ -302,8 +306,8 @@ export default function JobsPage() {
                           onClick={() => handleClose(job.id)}
                           disabled={actionLoading === job.id + '-close'}
                           style={{
-                            padding: '6px 14px', background: '#fef9c3', color: '#854d0e',
-                            border: '1px solid #fde047', borderRadius: '6px', cursor: 'pointer',
+                            padding: '6px 14px', background: 'rgba(234, 179, 8, 0.15)', color: '#facc15',
+                            border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', cursor: 'pointer',
                             fontSize: '12px', fontWeight: '500',
                           }}
                         >
@@ -313,8 +317,8 @@ export default function JobsPage() {
                       <button
                         onClick={() => openEdit(job)}
                         style={{
-                          padding: '6px 14px', background: '#eff6ff', color: '#3b82f6',
-                          border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer',
+                          padding: '6px 14px', background: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc',
+                          border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '6px', cursor: 'pointer',
                           fontSize: '12px', fontWeight: '500',
                         }}
                       >
@@ -323,8 +327,8 @@ export default function JobsPage() {
                       <button
                         onClick={() => setConfirmDelete(job.id)}
                         style={{
-                          padding: '6px 14px', background: '#fef2f2', color: '#991b1b',
-                          border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer',
+                          padding: '6px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171',
+                          border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', cursor: 'pointer',
                           fontSize: '12px', fontWeight: '500',
                         }}
                       >
@@ -342,25 +346,28 @@ export default function JobsPage() {
       {/* Create / Edit Modal */}
       {showModal && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '16px',
         }}>
           <div style={{
-            background: 'white', borderRadius: '12px', width: '100%',
+            background: '#0f172a', borderRadius: '12px', width: '100%',
             maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
           }}>
             {/* Modal Header */}
             <div style={{
-              padding: '20px 24px', borderBottom: '1px solid #e5e5e3',
+              padding: '20px 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#f8fafc' }}>
                 {editingJob ? 'Edit Job' : 'Post a New Job'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#999' }}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
               >×</button>
             </div>
 
@@ -368,8 +375,8 @@ export default function JobsPage() {
             <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {formError && (
                 <div style={{
-                  background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px',
-                  padding: '10px 14px', color: '#991b1b', fontSize: '13px',
+                  background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px',
+                  padding: '10px 14px', color: '#f87171', fontSize: '13px',
                 }}>
                   ⚠️ {formError}
                 </div>
@@ -377,7 +384,7 @@ export default function JobsPage() {
 
               {/* Title */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                   Job Title *
                 </label>
                 <input
@@ -386,20 +393,20 @@ export default function JobsPage() {
                   onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
                   placeholder="e.g. Senior Frontend Developer"
                   required
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc', boxSizing: 'border-box' }}
                 />
               </div>
 
               {/* Type & Location row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                     Job Type
                   </label>
                   <select
                     value={form.type}
                     onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', background: 'white' }}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc' }}
                   >
                     <option value="full-time">Full-time</option>
                     <option value="part-time">Part-time</option>
@@ -408,7 +415,7 @@ export default function JobsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                     Location
                   </label>
                   <input
@@ -416,14 +423,14 @@ export default function JobsPage() {
                     value={form.location}
                     onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
                     placeholder="e.g. New York, NY or Remote"
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
               {/* Salary */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                   Salary Range (Optional)
                 </label>
                 <input
@@ -431,13 +438,13 @@ export default function JobsPage() {
                   value={form.salary}
                   onChange={e => setForm(p => ({ ...p, salary: e.target.value }))}
                   placeholder="e.g. $80,000 – $100,000 / year"
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc', boxSizing: 'border-box' }}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                   Job Description *
                 </label>
                 <textarea
@@ -445,20 +452,20 @@ export default function JobsPage() {
                   onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                   placeholder="Describe the role, responsibilities, and what success looks like..."
                   required
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', minHeight: '120px', resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc', minHeight: '120px', resize: 'vertical', boxSizing: 'border-box' }}
                 />
               </div>
 
               {/* Requirements */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#1a1a1a' }}>
+                <label style={{ fontSize: '13px', fontWeight: '500', display: 'block', marginBottom: '6px', color: '#cbd5e1' }}>
                   Requirements (Optional)
                 </label>
                 <textarea
                   value={form.requirements}
                   onChange={e => setForm(p => ({ ...p, requirements: e.target.value }))}
                   placeholder="List skills, experience, and qualifications..."
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e3', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '14px', background: '#1e293b', color: '#f8fafc', minHeight: '100px', resize: 'vertical', boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -467,7 +474,7 @@ export default function JobsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  style={{ padding: '10px 20px', background: 'white', color: '#666', border: '1px solid #e5e5e3', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+                  style={{ padding: '10px 20px', background: '#1e293b', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                 >
                   Cancel
                 </button>
@@ -475,9 +482,9 @@ export default function JobsPage() {
                   type="submit"
                   disabled={saving}
                   style={{
-                    padding: '10px 24px', background: '#3b82f6', color: 'white',
-                    border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer',
-                    fontSize: '14px', fontWeight: '500', opacity: saving ? 0.6 : 1,
+                    padding: '10px 24px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white',
+                    border: 'none', borderRadius: '8px', cursor: saving ? 'not-allowed' : 'pointer',
+                    fontSize: '14px', fontWeight: '600', opacity: saving ? 0.6 : 1, boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
                   }}
                 >
                   {saving ? 'Saving...' : editingJob ? 'Save Changes' : 'Create Job'}
@@ -491,27 +498,27 @@ export default function JobsPage() {
       {/* Delete Confirm Modal */}
       {confirmDelete && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001,
         }}>
-          <div style={{ background: 'white', borderRadius: '10px', padding: '28px', maxWidth: '380px', width: '100%' }}>
-            <h3 style={{ fontSize: '17px', fontWeight: '600', color: '#1a1a1a', marginBottom: '10px' }}>
+          <div style={{ background: '#0f172a', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', padding: '28px', maxWidth: '380px', width: '100%' }}>
+            <h3 style={{ fontSize: '17px', fontWeight: '600', color: '#f8fafc', marginBottom: '10px' }}>
               Delete Job?
             </h3>
-            <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px' }}>
               This action cannot be undone. All associated applications will also be deleted.
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setConfirmDelete(null)}
-                style={{ padding: '8px 18px', background: 'white', border: '1px solid #e5e5e3', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+                style={{ padding: '8px 18px', background: '#1e293b', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
                 disabled={!!actionLoading}
-                style={{ padding: '8px 18px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                style={{ padding: '8px 18px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
               >
                 {actionLoading ? '...' : 'Delete'}
               </button>

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -17,10 +16,10 @@ export default function Sidebar() {
   ];
 
   return (
-    <div style={{
+    <aside style={{
       width: '240px',
-      background: '#ffffff',
-      borderRight: '1px solid #e5e5e3',
+      background: '#0f172a',
+      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
       height: '100vh',
       position: 'fixed',
       left: 0,
@@ -37,28 +36,38 @@ export default function Sidebar() {
         alignItems: 'center',
         gap: '12px',
         marginBottom: '32px',
+        paddingLeft: '4px',
       }}>
         <div style={{
-          width: '36px',
-          height: '36px',
-          background: '#3b82f6',
-          borderRadius: '8px',
+          width: '38px',
+          height: '38px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+          borderRadius: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          fontWeight: '700',
-          fontSize: '16px',
+          fontWeight: '800',
+          fontSize: '15px',
+          boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+          letterSpacing: '0.5px',
         }}>
           RMS
         </div>
-        <span style={{
-          fontSize: '18px',
-          fontWeight: '700',
-          color: '#1a1a1a',
-        }}>
-          RMS
-        </span>
+        <div>
+          <span style={{
+            fontSize: '18px',
+            fontWeight: '700',
+            color: '#f8fafc',
+            letterSpacing: '0.5px',
+            display: 'block',
+          }}>
+            RMS
+          </span>
+          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>
+            Recruitment Portal
+          </span>
+        </div>
       </div>
 
       {/* Menu Items */}
@@ -71,21 +80,22 @@ export default function Sidebar() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                padding: '12px 16px',
-                marginBottom: '8px',
+                padding: '11px 16px',
+                marginBottom: '6px',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                background: isActive ? '#eff6ff' : 'transparent',
-                borderLeft: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+                background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%)' : 'transparent',
+                borderLeft: isActive ? '3px solid #818cf8' : '3px solid transparent',
                 paddingLeft: '13px',
                 transition: 'all 0.2s ease',
-                color: isActive ? '#3b82f6' : '#666',
+                color: isActive ? '#a5b4fc' : '#94a3b8',
+                boxShadow: isActive ? '0 2px 8px rgba(99, 102, 241, 0.15)' : 'none',
               }}>
                 <span style={{ fontSize: '18px' }}>{item.icon}</span>
                 <span style={{
                   fontSize: '14px',
                   fontWeight: isActive ? '600' : '500',
-                  color: isActive ? '#3b82f6' : '#666',
+                  color: isActive ? '#f8fafc' : '#94a3b8',
                 }}>
                   {item.label}
                 </span>
@@ -98,17 +108,17 @@ export default function Sidebar() {
       {/* Logout */}
       <div style={{
         paddingTop: '16px',
-        borderTop: '1px solid #e5e5e3',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
       }}>
         <Link href="/auth/login">
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '12px 16px',
+            padding: '11px 16px',
             borderRadius: '8px',
             cursor: 'pointer',
-            color: '#666',
+            color: '#94a3b8',
             fontSize: '14px',
             fontWeight: '500',
             transition: 'all 0.2s ease',
@@ -118,6 +128,6 @@ export default function Sidebar() {
           </div>
         </Link>
       </div>
-    </div>
+    </aside>
   );
 }
