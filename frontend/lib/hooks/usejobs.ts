@@ -105,6 +105,7 @@ export function useJobs(statusFilter?: string) {
     loading,
     error,
     refetch: fetchJobs,
+    fetchJobs,
     createJob,
     updateJob,
     deleteJob,

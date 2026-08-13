@@ -86,6 +86,11 @@ model Application {
   status      String    @default("applied")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@unique([jobId, candidateId])
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([status])
 }
 
 model Resume {
