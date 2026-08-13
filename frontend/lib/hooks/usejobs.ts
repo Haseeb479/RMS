@@ -34,9 +34,14 @@ export function useJobs(statusFilter?: string) {
       setError(null);
       const params = statusFilter ? `?status=${statusFilter}` : '';
       const response = await api.get(`/jobs${params}`);
-      setJobs(response.data.data);
+      setJobs(response.data.data ?? []);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch jobs');
+      const msg =
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to fetch jobs. Make sure the server is running.';
+      setError(msg);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -47,32 +52,52 @@ export function useJobs(statusFilter?: string) {
   }, [fetchJobs]);
 
   const createJob = async (data: Partial<Job>) => {
-    const response = await api.post('/jobs', data);
-    setJobs(prev => [response.data.data, ...prev]);
-    return response.data.data;
+    try {
+      const response = await api.post('/jobs', data);
+      setJobs(prev => [response.data.data, ...prev]);
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to create job');
+    }
   };
 
   const updateJob = async (id: string, data: Partial<Job>) => {
-    const response = await api.patch(`/jobs/${id}`, data);
-    setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
-    return response.data.data;
+    try {
+      const response = await api.patch(`/jobs/${id}`, data);
+      setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to update job');
+    }
   };
 
   const deleteJob = async (id: string) => {
-    await api.delete(`/jobs/${id}`);
-    setJobs(prev => prev.filter(j => j.id !== id));
+    try {
+      await api.delete(`/jobs/${id}`);
+      setJobs(prev => prev.filter(j => j.id !== id));
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to delete job');
+    }
   };
 
   const publishJob = async (id: string) => {
-    const response = await api.post(`/jobs/${id}/publish`);
-    setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
-    return response.data.data;
+    try {
+      const response = await api.post(`/jobs/${id}/publish`);
+      setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to publish job');
+    }
   };
 
   const closeJob = async (id: string) => {
-    const response = await api.post(`/jobs/${id}/close`);
-    setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
-    return response.data.data;
+    try {
+      const response = await api.post(`/jobs/${id}/close`);
+      setJobs(prev => prev.map(j => j.id === id ? response.data.data : j));
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to close job');
+    }
   };
 
   return {

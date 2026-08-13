@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '@/lib/api';
 
 export function useCandidates() {
   const [candidates, setCandidates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
@@ -15,13 +15,18 @@ export function useCandidates() {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
       if (filters.status) params.append('status', filters.status);
-      if (filters.page) params.append('page', filters.page);
-      
+      if (filters.page) params.append('page', String(filters.page));
+
       const response = await api.get(`/candidates?${params.toString()}`);
-      setCandidates(response.data.data.candidates);
+      setCandidates(response.data.data.candidates ?? []);
       setPagination(response.data.data.pagination);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch candidates');
+      const msg =
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to fetch candidates. Make sure the server is running.';
+      setError(msg);
+      setCandidates([]);
     } finally {
       setLoading(false);
     }
@@ -32,36 +37,36 @@ export function useCandidates() {
       const response = await api.get('/candidates/stats');
       setStats(response.data.data);
     } catch (err: any) {
-      console.error('Error fetching stats:', err);
+      console.error('Error fetching candidate stats:', err.response?.data?.error || err.message);
     }
   };
 
   const createCandidate = async (data: any) => {
     try {
       const response = await api.post('/candidates', data);
-      setCandidates([response.data.data, ...candidates]);
+      setCandidates(prev => [response.data.data, ...prev]);
       return response.data.data;
     } catch (err: any) {
-      throw err;
+      throw new Error(err.response?.data?.error || err.message || 'Failed to create candidate');
     }
   };
 
   const updateCandidate = async (candidateId: string, data: any) => {
     try {
       const response = await api.patch(`/candidates/${candidateId}`, data);
-      setCandidates(candidates.map(c => c.id === candidateId ? response.data.data : c));
+      setCandidates(prev => prev.map(c => c.id === candidateId ? response.data.data : c));
       return response.data.data;
     } catch (err: any) {
-      throw err;
+      throw new Error(err.response?.data?.error || err.message || 'Failed to update candidate');
     }
   };
 
   const deleteCandidate = async (candidateId: string) => {
     try {
       await api.delete(`/candidates/${candidateId}`);
-      setCandidates(candidates.filter(c => c.id !== candidateId));
+      setCandidates(prev => prev.filter(c => c.id !== candidateId));
     } catch (err: any) {
-      throw err;
+      throw new Error(err.response?.data?.error || err.message || 'Failed to delete candidate');
     }
   };
 
@@ -70,7 +75,7 @@ export function useCandidates() {
       const response = await api.get(`/candidates/${candidateId}`);
       return response.data.data;
     } catch (err: any) {
-      throw err;
+      throw new Error(err.response?.data?.error || err.message || 'Failed to fetch candidate');
     }
   };
 
