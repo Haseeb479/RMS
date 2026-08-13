@@ -42,6 +42,17 @@ export const getById = async (req: Request, res: Response) => {
   }
 };
 
+// PATCH /api/interviews/:id - Update / Reschedule interview
+export const update = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const interview = await InterviewService.update(req.companyId!, id, req.body);
+    res.json({ success: true, data: interview });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
 // POST /api/interviews/:id/feedback - Add interview feedback & rating
 export const addFeedback = async (req: Request, res: Response) => {
   try {

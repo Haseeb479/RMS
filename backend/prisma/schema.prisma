@@ -144,6 +144,12 @@ model Interview {
   rating          Int?     // 1 - 5 scale
   recommendation  String?  // strong_hire | hire | reconsider | reject
 
+  // Email Scheduler Tracking
+  inviteEmailSent   Boolean  @default(false)  // Interview invite sent on creation
+  reminder24hSent   Boolean  @default(false)  // 24-hour reminder sent
+  reminder1hSent    Boolean  @default(false)  // 1-hour reminder sent
+  cancelEmailSent   Boolean  @default(false)  // Cancellation email sent
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

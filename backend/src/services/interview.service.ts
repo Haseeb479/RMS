@@ -1,4 +1,9 @@
 import { prisma } from '../config/database';
+import {
+  sendInterviewScheduledEmail,
+  sendInterviewCancelledEmail,
+  sendInterviewRescheduledEmail,
+} from './email.service';
 
 export interface CreateInterviewInput {
   candidateId: string;
@@ -21,8 +26,18 @@ export interface AddFeedbackInput {
   status?: string;
 }
 
+export interface UpdateInterviewInput {
+  title?: string;
+  type?: string;
+  scheduledAt?: string | Date;
+  duration?: number;
+  location?: string;
+  interviewerName?: string;
+  interviewerEmail?: string;
+}
+
 export class InterviewService {
-  // Schedule a new interview
+  // ─── Schedule a new interview ─────────────────────────────────────────────
   static async create(companyId: string, data: CreateInterviewInput) {
     if (!data.candidateId || !data.title || !data.scheduledAt) {
       throw new Error('Candidate ID, Title, and Scheduled Date/Time are required');
@@ -70,6 +85,10 @@ export class InterviewService {
         interviewerName: data.interviewerName || null,
         interviewerEmail: data.interviewerEmail || null,
         status: data.status || 'scheduled',
+        inviteEmailSent: false,
+        reminder24hSent: false,
+        reminder1hSent: false,
+        cancelEmailSent: false,
       },
       include: {
         candidate: true,
@@ -78,7 +97,7 @@ export class InterviewService {
       },
     });
 
-    // Auto update application status to 'interview' if linked application is in early stages
+    // Auto update application status to 'interview' if linked
     if (data.applicationId) {
       await prisma.application.update({
         where: { id: data.applicationId },
@@ -86,10 +105,31 @@ export class InterviewService {
       }).catch(() => {});
     }
 
+    // 📧 Send instant interview invitation email (non-blocking)
+    sendInterviewScheduledEmail({
+      candidateName: `${interview.candidate.firstName} ${interview.candidate.lastName}`,
+      candidateEmail: interview.candidate.email,
+      jobTitle: interview.job?.title,
+      interviewTitle: interview.title,
+      interviewType: interview.type,
+      scheduledAt: interview.scheduledAt,
+      duration: interview.duration,
+      location: interview.location,
+      interviewerName: interview.interviewerName,
+      interviewerEmail: interview.interviewerEmail,
+    })
+      .then(() => prisma.interview.update({
+        where: { id: interview.id },
+        data: { inviteEmailSent: true },
+      }).catch(() => {}))
+      .catch((err) => {
+        console.error('[Interview] Invite email failed (interview still created):', err.message);
+      });
+
     return interview;
   }
 
-  // List interviews for company with filters
+  // ─── List interviews for company with filters ─────────────────────────────
   static async listByCompany(
     companyId: string,
     filters: { candidateId?: string; jobId?: string; status?: string; search?: string } = {}
@@ -123,7 +163,7 @@ export class InterviewService {
     });
   }
 
-  // Get interview by ID
+  // ─── Get interview by ID ──────────────────────────────────────────────────
   static async getById(companyId: string, id: string) {
     const interview = await prisma.interview.findFirst({
       where: { id, companyId },
@@ -141,7 +181,72 @@ export class InterviewService {
     return interview;
   }
 
-  // Submit interview feedback & rating
+  // ─── Update interview details (triggers reschedule email if date changed) ─
+  static async update(companyId: string, id: string, data: UpdateInterviewInput) {
+    const existing = await prisma.interview.findFirst({
+      where: { id, companyId },
+      include: { candidate: true, job: true },
+    });
+
+    if (!existing) {
+      throw new Error('Interview not found');
+    }
+
+    const oldScheduledAt = existing.scheduledAt;
+    const newScheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : undefined;
+    const dateChanged =
+      newScheduledAt && newScheduledAt.getTime() !== oldScheduledAt.getTime();
+
+    // Reset reminder flags if date changed so reminders fire again for the new time
+    const reminderReset = dateChanged
+      ? { reminder24hSent: false, reminder1hSent: false }
+      : {};
+
+    const updated = await prisma.interview.update({
+      where: { id },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.type && { type: data.type }),
+        ...(newScheduledAt && { scheduledAt: newScheduledAt }),
+        ...(data.duration !== undefined && { duration: data.duration }),
+        ...(data.location !== undefined && { location: data.location }),
+        ...(data.interviewerName !== undefined && { interviewerName: data.interviewerName }),
+        ...(data.interviewerEmail !== undefined && { interviewerEmail: data.interviewerEmail }),
+        status: 'rescheduled',
+        ...reminderReset,
+      },
+      include: {
+        candidate: true,
+        job: true,
+        application: true,
+      },
+    });
+
+    // 📧 Send reschedule notification email if date/time changed (non-blocking)
+    if (dateChanged) {
+      sendInterviewRescheduledEmail(
+        {
+          candidateName: `${updated.candidate.firstName} ${updated.candidate.lastName}`,
+          candidateEmail: updated.candidate.email,
+          jobTitle: updated.job?.title,
+          interviewTitle: updated.title,
+          interviewType: updated.type,
+          scheduledAt: updated.scheduledAt,
+          duration: updated.duration,
+          location: updated.location,
+          interviewerName: updated.interviewerName,
+          interviewerEmail: updated.interviewerEmail,
+        },
+        oldScheduledAt,
+      ).catch((err) => {
+        console.error('[Interview] Reschedule email failed:', err.message);
+      });
+    }
+
+    return updated;
+  }
+
+  // ─── Submit interview feedback & rating ───────────────────────────────────
   static async addFeedback(companyId: string, id: string, data: AddFeedbackInput) {
     const existing = await prisma.interview.findFirst({
       where: { id, companyId },
@@ -173,7 +278,7 @@ export class InterviewService {
     return updated;
   }
 
-  // Update interview status (e.g. scheduled, completed, cancelled, rescheduled)
+  // ─── Update interview status ──────────────────────────────────────────────
   static async updateStatus(companyId: string, id: string, status: string) {
     const validStatuses = ['scheduled', 'completed', 'cancelled', 'rescheduled'];
     if (!validStatuses.includes(status)) {
@@ -182,13 +287,14 @@ export class InterviewService {
 
     const existing = await prisma.interview.findFirst({
       where: { id, companyId },
+      include: { candidate: true, job: true },
     });
 
     if (!existing) {
       throw new Error('Interview not found');
     }
 
-    return await prisma.interview.update({
+    const updated = await prisma.interview.update({
       where: { id },
       data: { status },
       include: {
@@ -197,9 +303,34 @@ export class InterviewService {
         application: true,
       },
     });
+
+    // 📧 Send cancellation email when interview is cancelled (non-blocking)
+    if (status === 'cancelled' && !existing.cancelEmailSent) {
+      sendInterviewCancelledEmail({
+        candidateName: `${existing.candidate.firstName} ${existing.candidate.lastName}`,
+        candidateEmail: existing.candidate.email,
+        jobTitle: existing.job?.title,
+        interviewTitle: existing.title,
+        interviewType: existing.type,
+        scheduledAt: existing.scheduledAt,
+        duration: existing.duration,
+        location: existing.location,
+        interviewerName: existing.interviewerName,
+        interviewerEmail: existing.interviewerEmail,
+      })
+        .then(() => prisma.interview.update({
+          where: { id },
+          data: { cancelEmailSent: true },
+        }).catch(() => {}))
+        .catch((err) => {
+          console.error('[Interview] Cancellation email failed:', err.message);
+        });
+    }
+
+    return updated;
   }
 
-  // Delete interview
+  // ─── Delete interview ─────────────────────────────────────────────────────
   static async delete(companyId: string, id: string) {
     const existing = await prisma.interview.findFirst({
       where: { id, companyId },
