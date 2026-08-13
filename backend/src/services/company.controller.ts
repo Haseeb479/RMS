@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { CompanyService } from './company.service';
+import { AnalyticsService } from './analytics.service';
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
@@ -29,4 +30,14 @@ export const getStats = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
-}
+};
+
+export const getAnalytics = async (req: Request, res: Response) => {
+  try {
+    const jobId = typeof req.query.jobId === 'string' ? req.query.jobId : undefined;
+    const analytics = await AnalyticsService.getCompanyAnalytics(req.companyId!, jobId);
+    res.json({ success: true, data: analytics });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

@@ -26,6 +26,7 @@ companyRouter.use(authMiddleware);
 companyRouter.get('/profile', companyController.getProfile);
 companyRouter.patch('/profile', companyController.updateProfile);
 companyRouter.get('/stats', companyController.getStats);
+companyRouter.get('/analytics', companyController.getAnalytics);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
