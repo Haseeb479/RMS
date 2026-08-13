@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useJob } from '@/lib/hooks/usejobs';
@@ -20,6 +20,9 @@ export default function JobDetailPage() {
   const id = params?.id as string;
   const { job, loading, error } = useJob(id);
 
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
+
   useEffect(() => {
     if (!isLoggedIn) router.push('/auth/login');
   }, [isLoggedIn, router]);
@@ -27,9 +30,27 @@ export default function JobDetailPage() {
   if (!isLoggedIn) return <div style={{ background: '#090d16', minHeight: '100vh', color: '#94a3b8', padding: '32px' }}>Loading...</div>;
 
   const statusStyle = job ? (STATUS_COLORS[job.status] || STATUS_COLORS.draft) : STATUS_COLORS.draft;
+  const publicApplyUrl = typeof window !== 'undefined' ? `${window.location.origin}/apply/${id}` : `http://localhost:3000/apply/${id}`;
+  const embedSnippet = `<iframe src="${publicApplyUrl}" width="100%" height="700" frameborder="0"></iframe>`;
+
+  const copyToClipboard = (text: string, setFn: (val: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setFn(true);
+    setTimeout(() => setFn(false), 2000);
+  };
+
+  const handleLinkedInShare = () => {
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicApplyUrl)}`;
+    window.open(linkedInUrl, '_blank');
+  };
+
+  const handleIndeedShare = () => {
+    const indeedSearchUrl = `https://www.indeed.com/hire`;
+    window.open(indeedSearchUrl, '_blank');
+  };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#090d16', color: '#f8fafc' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#090d16', color: '#f8fafc', fontFamily: "'Inter', sans-serif" }}>
       <Sidebar />
 
       <div style={{ marginLeft: '240px', flex: 1, width: '100%' }}>
@@ -58,7 +79,7 @@ export default function JobDetailPage() {
           )}
         </div>
 
-        <div style={{ padding: '32px', maxWidth: '800px' }}>
+        <div style={{ padding: '32px', maxWidth: '840px' }}>
           {loading && <div style={{ color: '#64748b', textAlign: 'center', padding: '48px' }}>Loading...</div>}
           {error && (
             <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '16px', color: '#f87171' }}>
@@ -69,8 +90,8 @@ export default function JobDetailPage() {
           {job && (
             <>
               {/* Job Header Card */}
-              <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#f8fafc', marginBottom: '12px' }}>
+              <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '28px', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#f8fafc', marginBottom: '12px' }}>
                   {job.title}
                 </h2>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', color: '#94a3b8', marginBottom: '16px' }}>
@@ -96,8 +117,142 @@ export default function JobDetailPage() {
                 </div>
               </div>
 
+              {/* Module 10: Multi-Platform Job Distribution Widget */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.08) 100%)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '20px' }}>📢</span>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc' }}>
+                      Multi-Platform Candidate Portal & Auto-Publishing
+                    </h3>
+                    <p style={{ fontSize: '12px', color: '#94a3b8' }}>
+                      Candidates applying from LinkedIn, Indeed, or your website will automatically be recorded in your RMS dashboard.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '16px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: '#a5b4fc', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '6px' }}>
+                    Public Candidate Portal URL
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={publicApplyUrl}
+                      style={{
+                        flex: 1,
+                        background: '#1e293b',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        color: '#34d399',
+                        fontSize: '13px',
+                        fontFamily: 'monospace',
+                      }}
+                    />
+                    <button
+                      onClick={() => copyToClipboard(publicApplyUrl, setCopiedLink)}
+                      style={{
+                        padding: '10px 18px',
+                        background: copiedLink ? '#10b981' : '#6366f1',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {copiedLink ? '✓ Copied!' : '📋 Copy Link'}
+                    </button>
+                    <a href={publicApplyUrl} target="_blank" rel="noopener noreferrer">
+                      <button style={{
+                        padding: '10px 14px',
+                        background: '#1e293b',
+                        color: '#f8fafc',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                      }}>
+                        🔗 Preview Portal ↗
+                      </button>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Social Share Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleLinkedInShare}
+                    style={{
+                      padding: '10px 18px',
+                      background: '#0a66c2',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <span>💼</span> Publish on LinkedIn
+                  </button>
+
+                  <button
+                    onClick={handleIndeedShare}
+                    style={{
+                      padding: '10px 18px',
+                      background: '#2164f3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <span>🌐</span> Post on Indeed
+                  </button>
+
+                  <button
+                    onClick={() => copyToClipboard(embedSnippet, setCopiedEmbed)}
+                    style={{
+                      padding: '10px 18px',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      color: '#f8fafc',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <span>💻</span> {copiedEmbed ? '✓ Embed Code Copied!' : 'Copy Website iFrame Embed'}
+                  </button>
+                </div>
+              </div>
+
               {/* Description */}
-              <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+              <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#f8fafc', marginBottom: '12px' }}>
                   Job Description
                 </h3>
@@ -108,7 +263,7 @@ export default function JobDetailPage() {
 
               {/* Requirements */}
               {job.requirements && (
-                <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+                <div style={{ background: '#0f172a', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '24px', marginBottom: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#f8fafc', marginBottom: '12px' }}>
                     Requirements
                   </h3>

@@ -6,6 +6,7 @@ import candidateRoutes from './routes/candidates.routes';
 import resumeRoutes from './routes/resume.routes';
 import applicationRoutes from './routes/applications.routes';
 import interviewRoutes from './routes/interviews.routes';
+import publicRoutes from './routes/public.routes';
 import { authMiddleware } from './middleware/auth.middleware';
 import * as companyController from './services/company.controller';
 
@@ -29,6 +30,7 @@ companyRouter.get('/stats', companyController.getStats);
 companyRouter.get('/analytics', companyController.getAnalytics);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/candidates', candidateRoutes);
