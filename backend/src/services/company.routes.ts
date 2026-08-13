@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CompanyService } from '../services/company.service';
+import { CompanyService } from './company.service';
 
 export const getProfile = async (req: Request, res: Response) => {
   try {

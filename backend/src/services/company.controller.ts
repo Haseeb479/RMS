@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CompanyService } from '../services/company.service';
+import { CompanyService } from './company.service';
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
@@ -29,4 +29,4 @@ export const getStats = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
-};
+}

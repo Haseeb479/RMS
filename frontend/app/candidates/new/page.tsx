@@ -3,14 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useCandidates } from '@/lib/hooks/usecandidates';
-import { useResume } from '@/lib/hooks/useresume';
 import Sidebar from '@/components/sidebar';
 import { useEffect, useState } from 'react';
 
 export default function AddCandidatePage() {
   const { isLoggedIn } = useAuth();
   const { createCandidate } = useCandidates();
-  const { uploadResume, uploading, error: uploadError, parsedData } = useResume();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -26,7 +24,6 @@ export default function AddCandidatePage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -34,38 +31,12 @@ export default function AddCandidatePage() {
     }
   }, [isLoggedIn, router]);
 
-  // Auto-fill form with parsed resume data
-  useEffect(() => {
-    if (parsedData) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: parsedData.firstName || prev.firstName,
-        lastName: parsedData.lastName || prev.lastName,
-        email: parsedData.email || prev.email,
-        phone: parsedData.phone || prev.phone,
-        experience: parsedData.experience ? String(parsedData.experience) : prev.experience,
-      }));
-    }
-  }, [parsedData]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setResumeFile(file);
-    try {
-      await uploadResume(file);
-    } catch (err) {
-      setError('Failed to parse resume');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,78 +127,6 @@ export default function AddCandidatePage() {
                   ⚠️ {error}
                 </div>
               )}
-
-              {uploadError && (
-                <div style={{
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: '6px',
-                  padding: '12px 16px',
-                  marginBottom: '20px',
-                  fontSize: '13px',
-                  color: '#991b1b',
-                }}>
-                  ⚠️ Resume Error: {uploadError}
-                </div>
-              )}
-
-              {/* RESUME UPLOAD SECTION */}
-              <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e5e3' }}>
-                <label style={{
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  display: 'block',
-                  marginBottom: '8px',
-                  color: '#1a1a1a',
-                }}>
-                  Upload Resume (Optional)
-                </label>
-                <p style={{
-                  fontSize: '12px',
-                  color: '#999',
-                  marginBottom: '12px',
-                }}>
-                  PDF, DOCX, DOC, or TXT (Max 5MB) - We'll auto-fill candidate details
-                </p>
-                <div style={{
-                  border: '2px dashed #e5e5e3',
-                  borderRadius: '6px',
-                  padding: '20px',
-                  textAlign: 'center',
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                  background: resumeFile ? '#f0fdf4' : 'white',
-                }}>
-                  <input
-                    type="file"
-                    id="resume-upload"
-                    onChange={handleFileChange}
-                    accept=".pdf,.docx,.doc,.txt"
-                    disabled={uploading}
-                    style={{ display: 'none' }}
-                  />
-                  <label
-                    htmlFor="resume-upload"
-                    style={{
-                      cursor: uploading ? 'not-allowed' : 'pointer',
-                      opacity: uploading ? 0.6 : 1,
-                    }}
-                  >
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a1a' }}>
-                      {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
-                    </p>
-                    {resumeFile && (
-                      <p style={{ fontSize: '13px', color: '#047857', marginTop: '8px' }}>
-                        ✅ {resumeFile.name}
-                      </p>
-                    )}
-                    {parsedData && (
-                      <p style={{ fontSize: '12px', color: '#047857', marginTop: '8px' }}>
-                        ✓ Resume parsed - fields auto-filled below
-                      </p>
-                    )}
-                  </label>
-                </div>
-              </div>
 
               {/* First Name */}
               <div style={{ marginBottom: '20px' }}>

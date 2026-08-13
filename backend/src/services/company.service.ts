@@ -11,18 +11,20 @@ export class CompanyService {
   // Update company
   static async update(companyId: string, data: any) {
     // Validate input
-    if (data.name && data.name.trim() === '') {
+    if (data.name !== undefined && data.name.trim() === '') {
       throw new Error('Company name cannot be empty');
     }
 
+    // Build update object — only include fields that were explicitly sent
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name.trim();
+    if (data.website !== undefined) updateData.website = data.website || null;
+    if (data.description !== undefined) updateData.description = data.description || null;
+    if (data.logo !== undefined) updateData.logo = data.logo || null;
+
     return await prisma.company.update({
       where: { id: companyId },
-      data: {
-        name: data.name || undefined,
-        website: data.website || undefined,
-        description: data.description || undefined,
-        logo: data.logo || undefined,
-      },
+      data: updateData,
     });
   }
 

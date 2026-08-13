@@ -12,5 +12,6 @@
             "password": "9889",
             "connectionTimeout": 30
         }
-    ]
+    ],
+    "git.ignoreLimitWarning": true
 }

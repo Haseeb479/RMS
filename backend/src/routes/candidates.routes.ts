@@ -1,9 +1,21 @@
-import { Router } from 'express';
+import express from 'express';
+import { authMiddleware } from '../middleware/auth.middleware';
+import {
+  create,
+  list,
+  getById,
+  update,
+  delete_ as deleteCandidate,
+  getStats,
+} from '../controllers/candidates.controller';
 
-const router = Router();
-
-router.get('/', (_req, res) => {
-  res.json({ message: 'Candidates route placeholder' });
-});
+const router = express.Router();
+router.use(authMiddleware);
+router.get('/', list);
+router.post('/', create);
+router.get('/stats', getStats);
+router.get('/:id', getById);
+router.patch('/:id', update);
+router.delete('/:id', deleteCandidate);
 
 export default router;
