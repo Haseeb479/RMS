@@ -2,9 +2,47 @@ import { prisma } from '../config/database';
 import { AuditService } from './audit.service';
 
 export class CandidateService {
-  // Create candidate (Disabled: candidates must apply through portal)
+  // Create candidate directly from HR dashboard
   static async create(companyId: string, data: any) {
-    throw new Error('Manual candidate creation is disabled. Candidates must apply through the public job application portal.');
+    if (!data.firstName || !data.lastName || !data.email) {
+      throw new Error('First Name, Last Name, and Email are required.');
+    }
+
+    // Check duplicate
+    const existing = await prisma.candidate.findFirst({
+      where: { email: data.email.trim().toLowerCase(), companyId },
+    });
+    if (existing) {
+      throw new Error(`A candidate with email ${data.email} already exists.`);
+    }
+
+    const skillsStr = Array.isArray(data.skills)
+      ? JSON.stringify(data.skills)
+      : typeof data.skills === 'string'
+      ? data.skills.startsWith('[') ? data.skills : JSON.stringify(data.skills.split(',').map((s: string) => s.trim()).filter(Boolean))
+      : null;
+
+    const candidate = await prisma.candidate.create({
+      data: {
+        companyId,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.trim().toLowerCase(),
+        phone: data.phone?.trim() || null,
+        skills: skillsStr,
+        tags: data.source ? JSON.stringify([data.source]) : null,
+        status: data.status || 'new',
+        score: data.score != null ? Number(data.score) : 80,
+      },
+    });
+
+    await AuditService.log(
+      companyId,
+      'CANDIDATE_CREATED',
+      `Directly added candidate ${candidate.firstName} ${candidate.lastName} (${candidate.email})`
+    );
+
+    return candidate;
   }
 
   // List candidates with pagination and filters

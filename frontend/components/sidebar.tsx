@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMobileNav } from '@/lib/use-mobile-nav';
@@ -166,6 +167,25 @@ const NAV_SECTIONS = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useMobileNav();
+  const asideRef = useRef<HTMLElement>(null);
+
+  // Restore sidebar scroll position across route navigations
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('zr_sidebar_scroll');
+      if (saved && asideRef.current) {
+        asideRef.current.scrollTop = Number(saved);
+      }
+    } catch {}
+  }, [pathname]);
+
+  const handleScroll = () => {
+    try {
+      if (asideRef.current) {
+        sessionStorage.setItem('zr_sidebar_scroll', String(asideRef.current.scrollTop));
+      }
+    } catch {}
+  };
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
@@ -188,6 +208,8 @@ export default function Sidebar() {
       )}
 
       <aside
+        ref={asideRef}
+        onScroll={handleScroll}
         className={`zr-sidebar ${isOpen ? 'open' : ''}`}
         style={{
           width: 'var(--zr-sidebar-w)',
@@ -275,7 +297,7 @@ export default function Sidebar() {
               const active = isActive(item.href);
               const IconComponent = item.icon;
               return (
-                <Link key={item.href} href={item.href} onClick={close}>
+                <Link key={item.href} href={item.href} scroll={false} onClick={close}>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -336,7 +358,7 @@ export default function Sidebar() {
         borderTop: '1px solid rgba(255,255,255,0.07)',
         flexShrink: 0,
       }}>
-        <Link href="/auth/login" onClick={close}>
+        <Link href="/auth/login" scroll={false} onClick={close}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 10px', borderRadius: 8, cursor: 'pointer',
