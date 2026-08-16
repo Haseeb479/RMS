@@ -3,6 +3,19 @@ import { config } from './config/env';
 import { prisma } from './config/database';
 import { verifyEmailConnection } from './services/email.service';
 import { startEmailScheduler } from './services/email.scheduler';
+import { execSync } from 'child_process';
+
+// ─── Auto-push schema in production (Vercel / Render / Koyeb cold starts) ─────
+if (process.env.NODE_ENV === 'production') {
+  try {
+    console.log('[DB] Running prisma db push...');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+    console.log('[DB] ✅ Schema synced successfully.');
+  } catch (err) {
+    console.warn('[DB] ⚠️  prisma db push failed (non-fatal):', err);
+  }
+}
+
 
 let server: any;
 let currentPort = config.PORT;
