@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: rms-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma db push && node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false        # you'll paste the Neon connection string here
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: FRONTEND_URL
+        sync: false        # your Vercel URL
+      - key: SMTP_USER
+        sync: false        # optional
+      - key: SMTP_PASS
+        sync: false        # optional
+      - key: SMTP_FROM
+        sync: false        # optional
+    healthCheckPath: /api/health
