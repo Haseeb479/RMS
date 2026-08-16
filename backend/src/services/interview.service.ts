@@ -4,6 +4,7 @@ import {
   sendInterviewCancelledEmail,
   sendInterviewRescheduledEmail,
 } from './email.service';
+import { NotificationService } from './notification.service';
 
 export interface CreateInterviewInput {
   candidateId: string;
@@ -104,6 +105,14 @@ export class InterviewService {
         data: { status: 'interview' },
       }).catch(() => {});
     }
+
+    // 🔔 Create real-time notification
+    NotificationService.createNotification(companyId, {
+      title: `📅 Interview Scheduled: ${interview.candidate.firstName} ${interview.candidate.lastName}`,
+      message: `${interview.title} (${interview.type}) scheduled for ${new Date(interview.scheduledAt).toLocaleString()}`,
+      type: 'interview_alert',
+      link: '/interviews',
+    }).catch(() => {});
 
     // 📧 Send instant interview invitation email (non-blocking)
     sendInterviewScheduledEmail({

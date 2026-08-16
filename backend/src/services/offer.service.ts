@@ -1,5 +1,6 @@
 import { prisma } from '../config/database';
 import { AuditService } from './audit.service';
+import { NotificationService } from './notification.service';
 import crypto from 'crypto';
 
 export class OfferService {
@@ -42,6 +43,14 @@ export class OfferService {
       'OFFER_LETTER_CREATED',
       `Issued offer letter "${offer.title}" to ${candidate.firstName} ${candidate.lastName} (${candidate.email})`
     );
+
+    // 🔔 Real-time notification
+    NotificationService.createNotification(companyId, {
+      title: `📝 Offer Issued: ${candidate.firstName} ${candidate.lastName}`,
+      message: `Offer sent for "${offer.title}" (${offer.salary}). Direct signing link created.`,
+      type: 'offer_signed',
+      link: '/offers',
+    }).catch(() => {});
 
     return offer;
   }
@@ -122,6 +131,14 @@ export class OfferService {
       action === 'accept' ? 'OFFER_ACCEPTED' : 'OFFER_DECLINED',
       `Candidate ${offer.candidate.firstName} ${offer.candidate.lastName} ${action}ed job offer "${offer.title}"`
     );
+
+    // 🔔 Real-time notification
+    NotificationService.createNotification(offer.companyId, {
+      title: action === 'accept' ? `🎉 Offer Accepted: ${offer.candidate.firstName} ${offer.candidate.lastName}` : `⚠️ Offer Declined: ${offer.candidate.firstName} ${offer.candidate.lastName}`,
+      message: `${offer.candidate.firstName} ${offer.candidate.lastName} has ${action}ed the offer for "${offer.title}".`,
+      type: 'offer_signed',
+      link: '/offers',
+    }).catch(() => {});
 
     return updated;
   }

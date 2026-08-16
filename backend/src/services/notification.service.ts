@@ -27,12 +27,6 @@ export class NotificationService {
    * List company notifications
    */
   static async listNotifications(companyId: string, limit: number = 40) {
-    // If no notifications exist, seed realistic real-time initial notifications
-    const count = await (prisma as any).notification.count({ where: { companyId } });
-    if (count === 0) {
-      await this.seedSampleNotifications(companyId);
-    }
-
     const notifications = await (prisma as any).notification.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' },
