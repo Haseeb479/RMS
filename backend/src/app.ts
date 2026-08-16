@@ -56,32 +56,39 @@ companyRouter.patch('/profile', companyController.updateProfile);
 companyRouter.get('/stats', companyController.getStats);
 companyRouter.get('/analytics', companyController.getAnalytics);
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/public', publicRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/jobs', questionnaireRoutes);
-app.use('/api/candidates', candidateRoutes);
-app.use('/api/resumes', resumeRoutes);
-app.use('/api/resumes', booleanSearchRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/interviews', interviewRoutes);
-app.use('/api/audit', auditRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/workflows', workflowRoutes);
-app.use('/api/inbox', inboxRoutes);
-app.use('/api/team', teamRoutes);
-app.use('/api/mobility', mobilityRoutes);
-app.use('/api/ats', atsRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/company', companyRouter);
+// ─── API Routes Router ────────────────────────────────────────────────────────
+const apiRouter = express.Router();
 
-// ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
+apiRouter.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+
+apiRouter.use('/public', publicRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/jobs', jobRoutes);
+apiRouter.use('/jobs', questionnaireRoutes);
+apiRouter.use('/candidates', candidateRoutes);
+apiRouter.use('/resumes', resumeRoutes);
+apiRouter.use('/resumes', booleanSearchRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/interviews', interviewRoutes);
+apiRouter.use('/audit', auditRoutes);
+apiRouter.use('/offers', offerRoutes);
+apiRouter.use('/workflows', workflowRoutes);
+apiRouter.use('/inbox', inboxRoutes);
+apiRouter.use('/team', teamRoutes);
+apiRouter.use('/mobility', mobilityRoutes);
+apiRouter.use('/ats', atsRoutes);
+apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/company', companyRouter);
+
+// Mount API router at both /api and root /
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
+// ─── Root Endpoint ─────────────────────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ status: 'OK', message: 'RMS Backend API is live and operational!', timestamp: new Date().toISOString() });
 });
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────

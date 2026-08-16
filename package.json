@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
     "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "postinstall": "prisma generate --schema=backend/prisma/schema.prisma",
     "test": "npm run test --workspace backend"
   },
   "devDependencies": {
