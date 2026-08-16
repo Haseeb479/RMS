@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useNotifications, NotificationItem } from '@/lib/hooks/usenotifications';
+import { useMobileNav } from '@/lib/use-mobile-nav';
 
 const PAGE_LABELS: Record<string, string> = {
   '/dashboard':            'Dashboard',
@@ -75,6 +76,7 @@ export default function TopNav() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { toggle: toggleMobileNav } = useMobileNav();
 
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
 
@@ -118,43 +120,73 @@ export default function TopNav() {
   };
 
   return (
-    <header style={{
-      height: 'var(--zr-topnav-h)',
-      background: 'var(--zr-white)',
-      borderBottom: '1px solid var(--zr-border)',
-      position: 'fixed',
-      top: 0,
-      left: 'var(--zr-sidebar-w)',
-      right: 0,
-      zIndex: 150,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 28px',
-      gap: 16,
-      boxShadow: '0 1px 0 var(--zr-border)',
-    }}>
+    <header
+      className="zr-topnav"
+      style={{
+        height: 'var(--zr-topnav-h)',
+        background: 'var(--zr-white)',
+        borderBottom: '1px solid var(--zr-border)',
+        position: 'fixed',
+        top: 0,
+        left: 'var(--zr-sidebar-w)',
+        right: 0,
+        zIndex: 150,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 20px',
+        gap: 12,
+        boxShadow: '0 1px 0 var(--zr-border)',
+      }}
+    >
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={toggleMobileNav}
+        className="zr-mobile-menu-btn"
+        aria-label="Toggle Menu"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--zr-border)',
+          borderRadius: 7,
+          padding: '6px 8px',
+          cursor: 'pointer',
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--zr-text)',
+          flexShrink: 0,
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 13, color: 'var(--zr-muted)', fontWeight: 400, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 13, color: 'var(--zr-muted)', fontWeight: 400, whiteSpace: 'nowrap' }} className="zr-desktop-only">
           Recruit Pro
         </span>
-        <BreadcrumbIcon />
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--zr-text)', whiteSpace: 'nowrap' }}>
+        <span className="zr-desktop-only"><BreadcrumbIcon /></span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--zr-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {pageLabel}
         </span>
       </div>
 
       {/* Global search */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        background: 'var(--zr-bg)',
-        border: '1px solid var(--zr-border)',
-        borderRadius: 7,
-        padding: '7px 12px',
-        width: 280,
-        flexShrink: 0,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-      }}
+      <div
+        className="zr-global-search"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'var(--zr-bg)',
+          border: '1px solid var(--zr-border)',
+          borderRadius: 7,
+          padding: '7px 12px',
+          width: 240,
+          flexShrink: 0,
+          transition: 'border-color 0.2s, box-shadow 0.2s',
+        }}
         onFocusCapture={e => {
           (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--zr-blue)';
           (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 3px rgba(20,115,230,0.1)';
@@ -172,7 +204,7 @@ export default function TopNav() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           onKeyDown={handleSearch}
-          placeholder="Search candidates, jobs..."
+          placeholder="Search..."
           style={{
             border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none',
             fontSize: 13, color: 'var(--zr-text)', width: '100%',
@@ -195,11 +227,11 @@ export default function TopNav() {
           }}
           style={{
             width: 36, height: 36, borderRadius: 7,
-            background: showNotifications ? 'var(--zr-blue-light)' : 'transparent',
-            border: `1px solid ${showNotifications ? 'var(--zr-blue)' : 'var(--zr-border)'}`,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: showNotifications ? 'var(--zr-blue)' : 'var(--zr-muted)',
-            transition: 'all 0.15s', position: 'relative',
+            border: '1px solid var(--zr-border)',
+            background: showNotifications ? 'var(--zr-orange-light)' : 'var(--zr-white)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: showNotifications ? 'var(--zr-orange)' : 'var(--zr-muted)',
+            position: 'relative', transition: 'all 0.15s',
           }}
           title="Notifications Center"
         >
@@ -207,16 +239,11 @@ export default function TopNav() {
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: -3, right: -3,
-              minWidth: 16, height: 16, borderRadius: 8,
-              background: 'var(--zr-orange)',
-              color: '#fff',
-              fontSize: 9,
-              fontWeight: 800,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 4px',
-              border: '2px solid var(--zr-white)',
+              background: '#E8652A', color: '#fff',
+              borderRadius: 10, fontSize: 10, fontWeight: 700,
+              minWidth: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '0 4px', border: '2px solid #fff',
+              boxShadow: '0 2px 4px rgba(232,101,42,0.4)',
             }}>
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
@@ -226,11 +253,13 @@ export default function TopNav() {
         {/* ══ REAL-TIME NOTIFICATION DRAWER / DROPDOWN ══ */}
         {showNotifications && (
           <div
+            className="zr-notif-dropdown"
             style={{
               position: 'absolute',
               top: 46,
               right: 0,
-              width: 380,
+              width: 'min(380px, calc(100vw - 24px))',
+              maxWidth: 'calc(100vw - 24px)',
               background: 'var(--zr-white)',
               border: '1px solid var(--zr-border)',
               borderRadius: 10,

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMobileNav } from '@/lib/use-mobile-nav';
 
 /* ── SVG Icon set ── */
 const Icons = {
@@ -164,52 +165,97 @@ const NAV_SECTIONS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { isOpen, close } = useMobileNav();
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 
   return (
-    <aside style={{
-      width: 'var(--zr-sidebar-w)',
-      background: 'var(--zr-navy)',
-      height: '100vh',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 200,
-      overflowY: 'auto',
-      overflowX: 'hidden',
-    }}>
-      {/* Logo area */}
-      <div style={{
-        height: 'var(--zr-topnav-h)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 18px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        flexShrink: 0,
-        gap: 12,
-      }}>
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          onClick={close}
+          className="zr-mobile-backdrop"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 15, 30, 0.65)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 2050,
+          }}
+        />
+      )}
+
+      <aside
+        className={`zr-sidebar ${isOpen ? 'open' : ''}`}
+        style={{
+          width: 'var(--zr-sidebar-w)',
+          background: 'var(--zr-navy)',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 2100,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        {/* Logo area */}
         <div style={{
-          width: 36, height: 36,
-          background: 'linear-gradient(135deg, #E8652A 0%, #FF8C5A 100%)',
-          borderRadius: 10,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontWeight: 800, fontSize: 12,
-          letterSpacing: '0.5px', flexShrink: 0,
-          boxShadow: '0 4px 12px rgba(232,101,42,0.45)',
-        }}>RMS</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: 0.2, lineHeight: 1.2 }}>
-            Recruit Pro
+          height: 'var(--zr-topnav-h)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 18px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 36, height: 36,
+              background: 'linear-gradient(135deg, #E8652A 0%, #FF8C5A 100%)',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 800, fontSize: 12,
+              letterSpacing: '0.5px', flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(232,101,42,0.45)',
+            }}>RMS</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: 0.2, lineHeight: 1.2 }}>
+                Recruit Pro
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 400, marginTop: 1 }}>
+                Management System
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', fontWeight: 400, marginTop: 1 }}>
-            Management System
-          </div>
+
+          {/* Close button on mobile */}
+          <button
+            onClick={close}
+            className="zr-mobile-close-btn"
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: 'none',
+              borderRadius: 6,
+              color: '#fff',
+              width: 30,
+              height: 30,
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
-      </div>
 
       {/* Navigation sections */}
       <nav style={{ flex: 1, padding: '8px 0 16px' }}>
@@ -229,7 +275,7 @@ export default function Sidebar() {
               const active = isActive(item.href);
               const IconComponent = item.icon;
               return (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} onClick={close}>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -290,7 +336,7 @@ export default function Sidebar() {
         borderTop: '1px solid rgba(255,255,255,0.07)',
         flexShrink: 0,
       }}>
-        <Link href="/auth/login">
+        <Link href="/auth/login" onClick={close}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 10px', borderRadius: 8, cursor: 'pointer',
@@ -317,5 +363,6 @@ export default function Sidebar() {
         </Link>
       </div>
     </aside>
+  </>
   );
 }
