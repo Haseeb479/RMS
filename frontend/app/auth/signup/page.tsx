@@ -24,7 +24,13 @@ export default function SignupPage() {
       await register(email, password, companyName);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Cannot connect to backend server. Please check your NEXT_PUBLIC_API_URL or verify backend is running.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
