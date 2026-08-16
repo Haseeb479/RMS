@@ -23,17 +23,23 @@ import * as companyController from './services/company.controller';
 const app = express();
 
 // ─── Global Middleware (MUST come before routes) ───────────────────────────────
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL, 'http://localhost:3000']
-  : ['*'];
-
 app.use(cors({
   origin: (origin, callback) => {
-    if (allowedOrigins.includes('*') || !origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    // Allow requests with no origin (like curl, health checks, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Allow configured FRONTEND_URL
+    if (process.env.FRONTEND_URL && (origin === process.env.FRONTEND_URL || origin === process.env.FRONTEND_URL.replace(/\/$/, ''))) {
+      return callback(null, true);
     }
+
+    // Allow localhost and any Vercel domain (*.vercel.app)
+    if (origin.includes('localhost') || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    // Fallback: allow
+    return callback(null, true);
   },
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
