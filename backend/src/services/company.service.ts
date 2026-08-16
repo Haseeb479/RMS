@@ -21,6 +21,12 @@ export class CompanyService {
     if (data.website !== undefined) updateData.website = data.website || null;
     if (data.description !== undefined) updateData.description = data.description || null;
     if (data.logo !== undefined) updateData.logo = data.logo || null;
+    if (data.careerHeadline !== undefined) updateData.careerHeadline = data.careerHeadline || null;
+    if (data.careerSubtitle !== undefined) updateData.careerSubtitle = data.careerSubtitle || null;
+    if (data.careerBanner !== undefined) updateData.careerBanner = data.careerBanner || null;
+    if (data.careerColor !== undefined) updateData.careerColor = data.careerColor || null;
+    if (data.careerPerks !== undefined) updateData.careerPerks = typeof data.careerPerks === 'string' ? data.careerPerks : JSON.stringify(data.careerPerks);
+    if (data.socialLinks !== undefined) updateData.socialLinks = typeof data.socialLinks === 'string' ? data.socialLinks : JSON.stringify(data.socialLinks);
 
     return await prisma.company.update({
       where: { id: companyId },

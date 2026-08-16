@@ -79,6 +79,43 @@ export function useCandidates() {
     }
   };
 
+  // ─── Notes ────────────────────────────────────────────────────────────────
+  const getNotes = async (candidateId: string) => {
+    try {
+      const response = await api.get(`/candidates/${candidateId}/notes`);
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to fetch notes');
+    }
+  };
+
+  const addNote = async (candidateId: string, content: string, authorName?: string, type?: string) => {
+    try {
+      const response = await api.post(`/candidates/${candidateId}/notes`, { content, authorName, type });
+      return response.data.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to add note');
+    }
+  };
+
+  const deleteNote = async (candidateId: string, noteId: string) => {
+    try {
+      await api.delete(`/candidates/${candidateId}/notes/${noteId}`);
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || err.message || 'Failed to delete note');
+    }
+  };
+
+  // ─── Duplicate Detection ──────────────────────────────────────────────────
+  const checkDuplicate = async (email: string) => {
+    try {
+      const response = await api.get(`/candidates/check-duplicate?email=${encodeURIComponent(email)}`);
+      return response.data.data as { isDuplicate: boolean; candidate: any };
+    } catch {
+      return { isDuplicate: false, candidate: null };
+    }
+  };
+
   return {
     candidates,
     loading,
@@ -91,5 +128,9 @@ export function useCandidates() {
     updateCandidate,
     deleteCandidate,
     getCandidate,
+    getNotes,
+    addNote,
+    deleteNote,
+    checkDuplicate,
   };
 }

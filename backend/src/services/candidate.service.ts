@@ -1,36 +1,10 @@
 import { prisma } from '../config/database';
+import { AuditService } from './audit.service';
 
 export class CandidateService {
-  // Create candidate
+  // Create candidate (Disabled: candidates must apply through portal)
   static async create(companyId: string, data: any) {
-    if (!data.firstName || !data.lastName || !data.email) {
-      throw new Error('First name, last name, and email are required');
-    }
-
-    // Check if email already exists for this company
-    const existing = await prisma.candidate.findFirst({
-      where: { email: data.email, companyId },
-    });
-
-    if (existing) {
-      throw new Error('Candidate with this email already exists');
-    }
-
-    return await prisma.candidate.create({
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        location: data.location,
-        skills: data.skills ? JSON.stringify(data.skills) : null,
-        experience: data.experience,
-        salary: data.salary,
-        notes: data.notes,
-        status: 'new',
-        companyId,
-      },
-    });
+    throw new Error('Manual candidate creation is disabled. Candidates must apply through the public job application portal.');
   }
 
   // List candidates with pagination and filters
@@ -44,12 +18,13 @@ export class CandidateService {
       where.status = status;
     }
 
-    // Search filter (name or email)
+    // Search filter (name, email, or skills)
     if (search) {
       where.OR = [
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
+        { skills: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -61,6 +36,26 @@ export class CandidateService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          applications: {
+            include: {
+              job: {
+                select: {
+                  id: true,
+                  jobCode: true,
+                  title: true,
+                  status: true,
+                  location: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
+          resumes: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
       }),
       prisma.candidate.count({ where }),
     ]);
@@ -76,13 +71,23 @@ export class CandidateService {
     };
   }
 
-  // Get single candidate
+  // Get single candidate with notes
   static async getById(candidateId: string, companyId: string) {
     return await prisma.candidate.findFirst({
       where: { id: candidateId, companyId },
       include: {
         applications: {
-          include: { job: true },
+          include: {
+            job: true,
+            answers: {
+              include: {
+                screeningQuestion: true,
+              },
+            },
+          },
+        },
+        activityNotes: {
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -98,22 +103,37 @@ export class CandidateService {
       throw new Error('Candidate not found');
     }
 
-    return await prisma.candidate.update({
+    const updated = await prisma.candidate.update({
       where: { id: candidateId },
       data: {
-        firstName: data.firstName || undefined,
-        lastName: data.lastName || undefined,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
-        location: data.location || undefined,
-        skills: data.skills ? JSON.stringify(data.skills) : undefined,
-        experience: data.experience || undefined,
-        salary: data.salary || undefined,
-        notes: data.notes || undefined,
-        status: data.status || undefined,
-        score: data.score || undefined,
+        firstName: data.firstName !== undefined ? data.firstName : undefined,
+        lastName: data.lastName !== undefined ? data.lastName : undefined,
+        email: data.email !== undefined ? data.email : undefined,
+        phone: data.phone !== undefined ? data.phone : undefined,
+        location: data.location !== undefined ? data.location : undefined,
+        skills: data.skills !== undefined ? JSON.stringify(data.skills) : undefined,
+        tags: data.tags !== undefined ? JSON.stringify(data.tags) : undefined,
+        experience: data.experience !== undefined ? data.experience : undefined,
+        salary: data.salary !== undefined ? data.salary : undefined,
+        notes: data.notes !== undefined ? data.notes : undefined,
+        status: data.status !== undefined ? data.status : undefined,
+        score: data.score !== undefined ? data.score : undefined,
       },
     });
+
+    if (data.status && data.status !== candidate.status) {
+      await AuditService.log(
+        companyId,
+        'CANDIDATE_STATUS_UPDATED',
+        `Updated candidate ${candidate.firstName} ${candidate.lastName} status to ${data.status}`
+      );
+
+      // Trigger automated stage workflow rules
+      const { WorkflowService } = await import('./workflow.service');
+      await WorkflowService.triggerStageWorkflow(companyId, candidateId, data.status);
+    }
+
+    return updated;
   }
 
   // Delete candidate
@@ -131,9 +151,17 @@ export class CandidateService {
       where: { candidateId },
     });
 
-    return await prisma.candidate.delete({
+    const result = await prisma.candidate.delete({
       where: { id: candidateId },
     });
+
+    await AuditService.log(
+      companyId,
+      'GDPR_CANDIDATE_DELETION',
+      `Permanently deleted candidate ${candidate.firstName} ${candidate.lastName} (${candidate.email}) under GDPR right-to-be-forgotten`
+    );
+
+    return result;
   }
 
   // Get candidate stats
@@ -153,5 +181,41 @@ export class CandidateService {
       total: await prisma.candidate.count({ where: { companyId } }),
       byStatus: Object.fromEntries(stats.map(s => [s.status, s.count])),
     };
+  }
+
+  // ─── Activity Notes ───────────────────────────────────────────────────────
+  static async getNotes(candidateId: string, companyId: string) {
+    return await (prisma as any).candidateNote.findMany({
+      where: { candidateId, companyId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  static async addNote(candidateId: string, companyId: string, data: { content: string; authorName?: string; type?: string }) {
+    return await (prisma as any).candidateNote.create({
+      data: {
+        candidateId,
+        companyId,
+        content: data.content,
+        authorName: data.authorName || 'Recruiter',
+        type: data.type || 'note',
+      },
+    });
+  }
+
+  static async deleteNote(noteId: string, companyId: string) {
+    const note = await (prisma as any).candidateNote.findFirst({ where: { id: noteId, companyId } });
+    if (!note) throw new Error('Note not found');
+    return await (prisma as any).candidateNote.delete({ where: { id: noteId } });
+  }
+
+  // ─── Duplicate Detection ──────────────────────────────────────────────────
+  static async checkDuplicate(email: string, companyId: string) {
+    if (!email) return { isDuplicate: false, candidate: null };
+    const existing = await prisma.candidate.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' }, companyId },
+      select: { id: true, firstName: true, lastName: true, email: true, status: true, createdAt: true },
+    });
+    return { isDuplicate: !!existing, candidate: existing };
   }
 }

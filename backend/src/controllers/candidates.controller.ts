@@ -70,3 +70,44 @@ export const getStats = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// ─── Activity Notes ───────────────────────────────────────────────────────────
+export const getNotes = async (req: Request, res: Response) => {
+  try {
+    const notes = await CandidateService.getNotes(req.params.id as string, req.companyId!);
+    res.json({ success: true, data: notes });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+export const addNote = async (req: Request, res: Response) => {
+  try {
+    const { content, authorName, type } = req.body;
+    if (!content) return res.status(400).json({ success: false, error: 'Note content is required' });
+    const note = await CandidateService.addNote(req.params.id as string, req.companyId!, { content, authorName, type });
+    res.status(201).json({ success: true, data: note });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+export const deleteNote = async (req: Request, res: Response) => {
+  try {
+    await CandidateService.deleteNote(req.params.noteId as string, req.companyId!);
+    res.json({ success: true, message: 'Note deleted' });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// ─── Duplicate check ──────────────────────────────────────────────────────────
+export const checkDuplicate = async (req: Request, res: Response) => {
+  try {
+    const email = typeof req.query.email === 'string' ? req.query.email : '';
+    const result = await CandidateService.checkDuplicate(email, req.companyId!);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

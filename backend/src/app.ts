@@ -7,6 +7,16 @@ import resumeRoutes from './routes/resume.routes';
 import applicationRoutes from './routes/applications.routes';
 import interviewRoutes from './routes/interviews.routes';
 import publicRoutes from './routes/public.routes';
+import questionnaireRoutes from './routes/questionnaire.routes';
+import auditRoutes from './routes/audit.routes';
+import offerRoutes from './routes/offer.routes';
+import workflowRoutes from './routes/workflow.routes';
+import booleanSearchRoutes from './routes/booleanSearch.routes';
+import inboxRoutes from './routes/inbox.routes';
+import teamRoutes from './routes/team.routes';
+import mobilityRoutes from './routes/mobility.routes';
+import atsRoutes from './routes/ats.routes';
+import notificationRoutes from './routes/notification.routes';
 import { authMiddleware } from './middleware/auth.middleware';
 import * as companyController from './services/company.controller';
 
@@ -33,10 +43,20 @@ companyRouter.get('/analytics', companyController.getAnalytics);
 app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/jobs', questionnaireRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/resumes', resumeRoutes);
+app.use('/api/resumes', booleanSearchRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/interviews', interviewRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/offers', offerRoutes);
+app.use('/api/workflows', workflowRoutes);
+app.use('/api/inbox', inboxRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/mobility', mobilityRoutes);
+app.use('/api/ats', atsRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/company', companyRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────

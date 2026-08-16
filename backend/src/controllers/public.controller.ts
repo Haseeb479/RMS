@@ -1,15 +1,24 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { ResumeService } from '../services/resume.service';
+import { AuditService } from '../services/audit.service';
+import { AtsService } from '../services/ats.service';
+import { NotificationService } from '../services/notification.service';
 
 // GET /api/public/jobs/:id - Get published job details (public access)
 export const getPublicJob = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
+    const isNum = !isNaN(Number(id));
+    const numId = isNum ? parseInt(id, 10) : -1;
+
     const job = await prisma.job.findFirst({
       where: {
-        id,
         status: 'published',
+        OR: [
+          { id },
+          ...(isNum ? [{ jobCode: numId }] : []),
+        ],
       },
       include: {
         company: {
@@ -21,6 +30,9 @@ export const getPublicJob = async (req: Request, res: Response) => {
             description: true,
             logo: true,
           },
+        },
+        questions: {
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -48,6 +60,7 @@ export const getCompanyCareers = async (req: Request, res: Response) => {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
+            jobCode: true,
             title: true,
             description: true,
             location: true,
@@ -83,12 +96,22 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
       experience,
       skills,
       notes,
+      privacyConsent,
+      answers: rawAnswers,
     } = req.body;
 
     if (!jobId || !firstName || !lastName || !email) {
       return res.status(400).json({
         success: false,
         error: 'Job ID, First Name, Last Name, and Email are required.',
+      });
+    }
+
+    const consentGiven = privacyConsent === true || privacyConsent === 'true';
+    if (!consentGiven) {
+      return res.status(400).json({
+        success: false,
+        error: 'Data Privacy Consent is required to submit your job application.',
       });
     }
 
@@ -147,6 +170,7 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
 
     // Process file upload if provided
     let resumeRecord = null;
+    let inboundRecord = null;
     if (req.file) {
       const extractedText = await ResumeService.extractTextFromFile(req.file);
       resumeRecord = await ResumeService.create(companyId, candidate.id, req.file, extractedText);
@@ -156,6 +180,55 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
         where: { id: candidate.id },
         data: { resume: req.file.path },
       });
+
+      // ─── Auto-save to Resume Inbox ───────────────────────────────────────
+      try {
+        const parsedSkillsJson = skillsStr || null;
+
+        inboundRecord = await (prisma as any).inboundResume.create({
+          data: {
+            companyId,
+            senderEmail: email.trim().toLowerCase(),
+            senderName: `${firstName.trim()} ${lastName.trim()}`,
+            subject: `Job Application – ${job.title}`,
+            source: 'job_application',
+            status: 'pending',
+            fileName: req.file.originalname,
+            filePath: req.file.path,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+            extractedText: extractedText || null,
+            parsedName: `${firstName.trim()} ${lastName.trim()}`,
+            parsedEmail: email.trim().toLowerCase(),
+            parsedPhone: phone ? phone.trim() : null,
+            parsedSkills: parsedSkillsJson,
+            parsedExperience: expNum || null,
+            candidateId: candidate.id,
+            assignedJobId: job.id,
+          },
+        });
+
+        // ─── Fire ATS Scoring async (don't block the response) ──────────────
+        setImmediate(async () => {
+          try {
+            const { atsResult } = await AtsService.scoreInboundResume(inboundRecord!.id, companyId, job.id);
+
+            // Notify HR about this new application with its ATS score
+            const scoreEmoji = atsResult.atsScore >= 80 ? '⭐' : atsResult.atsScore >= 60 ? '📋' : '⚠️';
+            await NotificationService.createNotification(companyId, {
+              title: `${scoreEmoji} New Application: ${firstName} ${lastName} (${atsResult.atsScore}% ATS)`,
+              message: `Applied for "${job.title}" — ATS score ${atsResult.atsScore}%. ${atsResult.recommendationReason || ''}`,
+              type: 'high_ats_match',
+              link: '/sourcing/inbox',
+              meta: { resumeId: inboundRecord!.id, atsScore: atsResult.atsScore, jobId: job.id, candidateId: candidate.id },
+            });
+          } catch (err) {
+            console.error('[ATS Auto-Score] Failed for application resume:', err);
+          }
+        });
+      } catch (err) {
+        console.error('[Inbox Ingest] Failed to save to resume inbox:', err);
+      }
     }
 
     // Check existing application
@@ -174,9 +247,45 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
           jobId: job.id,
           candidateId: candidate.id,
           status: 'applied',
+          privacyConsent: true,
         },
       });
     }
+
+    // Save Screening Questionnaire Answers if provided
+    let answersObj: Record<string, string> = {};
+    if (rawAnswers) {
+      try {
+        answersObj = typeof rawAnswers === 'string' ? JSON.parse(rawAnswers) : rawAnswers;
+      } catch (err) {
+        answersObj = {};
+      }
+    }
+
+    if (Object.keys(answersObj).length > 0) {
+      await Promise.all(
+        Object.entries(answersObj).map(async ([questionId, answerVal]) => {
+          if (answerVal !== undefined && answerVal !== null) {
+            await prisma.candidateAnswer.create({
+              data: {
+                applicationId: application!.id,
+                questionId,
+                answer: String(answerVal),
+              },
+            });
+          }
+        })
+      );
+    }
+
+    // Record Audit Log
+    await AuditService.log(
+      companyId,
+      'APPLICATION_SUBMITTED',
+      `Candidate ${candidate.firstName} ${candidate.lastName} (${candidate.email}) applied for ${job.title}`,
+      undefined,
+      req.ip
+    );
 
     res.status(201).json({
       success: true,
@@ -187,6 +296,8 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
         jobTitle: job.title,
         status: application.status,
         resumeUploaded: !!resumeRecord,
+        inboxSaved: !!inboundRecord,
+        atsScoring: !!inboundRecord ? 'in_progress' : null,
       },
     });
   } catch (error: any) {

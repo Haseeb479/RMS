@@ -1,4 +1,5 @@
 import { prisma } from '../config/database';
+import { AuditService } from './audit.service';
 
 export interface CreateJobInput {
   title: string;
@@ -94,11 +95,19 @@ export class JobService {
     const existing = await prisma.job.findFirst({ where: { id: jobId, companyId } });
     if (!existing) throw new Error('Job not found');
 
-    return await prisma.job.update({
+    const updated = await prisma.job.update({
       where: { id: jobId },
       data: { status: 'published' },
-      include: { _count: { select: { applications: true } } },
+      include: { company: true, _count: { select: { applications: true } } },
     });
+
+    await AuditService.log(
+      companyId,
+      'JOB_PUBLISHED_REALTIME',
+      `Published job "${updated.title}" (JOB-${updated.jobCode}) simultaneously across Company Portal, LinkedIn, Indeed XML Feed, and Google Jobs`
+    );
+
+    return updated;
   }
 
   // Close a job

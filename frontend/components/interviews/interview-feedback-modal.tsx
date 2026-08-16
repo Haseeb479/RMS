@@ -11,10 +11,10 @@ interface InterviewFeedbackModalProps {
 }
 
 const RECOMMENDATION_OPTIONS = [
-  { id: 'strong_hire', label: 'Strong Hire', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.3)' },
-  { id: 'hire', label: 'Hire', color: '#34d399', bg: 'rgba(52, 211, 153, 0.15)', border: 'rgba(52, 211, 153, 0.3)' },
-  { id: 'reconsider', label: 'Reconsider', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)', border: 'rgba(251, 191, 36, 0.3)' },
-  { id: 'reject', label: 'Reject', color: '#f87171', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.3)' },
+  { id: 'strong_hire', label: 'Strong Hire', color: '#27AE60', bg: 'var(--zr-success-light)', border: 'rgba(39, 174, 96, 0.3)' },
+  { id: 'hire', label: 'Hire', color: '#27AE60', bg: 'var(--zr-success-light)', border: 'rgba(39, 174, 96, 0.3)' },
+  { id: 'reconsider', label: 'Reconsider', color: '#E8652A', bg: 'var(--zr-orange-light)', border: 'rgba(232, 101, 42, 0.3)' },
+  { id: 'reject', label: 'Reject', color: '#E74C3C', bg: 'var(--zr-danger-light)', border: 'rgba(231, 76, 60, 0.3)' },
 ];
 
 export default function InterviewFeedbackModal({
@@ -65,196 +65,142 @@ export default function InterviewFeedbackModal({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(3, 7, 18, 0.8)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-        padding: '20px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: 'linear-gradient(145deg, #0f172a, #1e293b)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '16px',
-          width: '100%',
-          maxWidth: '540px',
-          padding: '28px',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-          color: '#f8fafc',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="zr-modal-overlay" onClick={onClose}>
+      <div className="zr-modal" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className="zr-modal-header">
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#f8fafc', margin: 0 }}>
-              📝 Add Interview Feedback
-            </h2>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px', margin: 0 }}>
-              Candidate: <strong style={{ color: '#818cf8' }}>{interview.candidate?.firstName} {interview.candidate?.lastName}</strong> ({interview.title})
+            <div className="zr-modal-title">Interview Evaluation & Rating</div>
+            <p style={{ fontSize: '12px', color: 'var(--zr-muted)', marginTop: '2px' }}>
+              Evaluate {interview.candidate?.firstName} {interview.candidate?.lastName} for {interview.title}
             </p>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: 'transparent',
+              background: 'none',
               border: 'none',
-              color: '#94a3b8',
-              fontSize: '20px',
+              fontSize: '18px',
               cursor: 'pointer',
-              padding: '4px 8px',
+              color: 'var(--zr-muted)',
+              padding: '4px',
             }}
           >
             ✕
           </button>
         </div>
 
-        {formError && (
-          <div
-            style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              color: '#f87171',
-              fontSize: '13px',
-            }}
-          >
-            ⚠️ {formError}
-          </div>
-        )}
-
+        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Star Rating Select */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '8px' }}>
-              Overall Score (1 - 5 Stars)
-            </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  style={{
-                    background: rating >= star ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    border: `1px solid ${rating >= star ? '#fbbf24' : 'rgba(255, 255, 255, 0.1)'}`,
-                    borderRadius: '8px',
-                    padding: '8px 14px',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  ⭐ {star}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="zr-modal-body">
+            {formError && (
+              <div
+                style={{
+                  background: 'var(--zr-danger-light)',
+                  border: '1px solid var(--zr-danger)',
+                  borderRadius: '7px',
+                  padding: '10px 14px',
+                  marginBottom: '16px',
+                  color: 'var(--zr-danger)',
+                  fontSize: '13px',
+                }}
+              >
+                ⚠ {formError}
+              </div>
+            )}
 
-          {/* Recommendation Options */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '8px' }}>
-              Hiring Recommendation
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {RECOMMENDATION_OPTIONS.map((option) => {
-                const isSelected = recommendation === option.id;
-
-                return (
+            {/* Star Rating Select */}
+            <div className="zr-form-group">
+              <label className="zr-label">Candidate Score (1 to 5 Stars)</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {[1, 2, 3, 4, 5].map((star) => (
                   <button
-                    key={option.id}
                     type="button"
-                    onClick={() => setRecommendation(option.id)}
+                    key={star}
+                    onClick={() => setRating(star)}
                     style={{
-                      padding: '10px 14px',
+                      background: rating >= star ? 'var(--zr-orange-light)' : 'var(--zr-bg)',
+                      border: `1px solid ${rating >= star ? 'var(--zr-orange)' : 'var(--zr-border)'}`,
+                      color: rating >= star ? 'var(--zr-orange)' : 'var(--zr-muted)',
                       borderRadius: '8px',
-                      background: isSelected ? option.bg : 'rgba(255, 255, 255, 0.03)',
-                      border: `1.5px solid ${isSelected ? option.color : 'rgba(255, 255, 255, 0.08)'}`,
-                      color: isSelected ? option.color : '#94a3b8',
-                      fontWeight: isSelected ? '700' : '500',
-                      fontSize: '13px',
+                      padding: '8px 16px',
+                      fontSize: '16px',
                       cursor: 'pointer',
-                      textAlign: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: '700',
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {option.label}
+                    <span>⭐</span> {star}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+
+            {/* Recommendation Chips */}
+            <div className="zr-form-group">
+              <label className="zr-label">Hiring Recommendation</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                {RECOMMENDATION_OPTIONS.map((rec) => {
+                  const isSelected = recommendation === rec.id;
+                  return (
+                    <button
+                      type="button"
+                      key={rec.id}
+                      onClick={() => setRecommendation(rec.id)}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${isSelected ? rec.color : 'var(--zr-border)'}`,
+                        background: isSelected ? rec.bg : 'var(--zr-white)',
+                        color: isSelected ? rec.color : 'var(--zr-text-2)',
+                        fontWeight: isSelected ? '700' : '500',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {rec.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Detailed Notes */}
+            <div className="zr-form-group" style={{ marginBottom: 0 }}>
+              <label className="zr-label">Interview Notes & Observations *</label>
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Highlight candidate strengths, technical proficiency, areas for improvement..."
+                rows={4}
+                required
+                className="zr-input"
+                style={{ resize: 'vertical' }}
+              />
             </div>
           </div>
 
-          {/* Feedback Notes */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-              Interview Notes & Detailed Feedback *
-            </label>
-            <textarea
-              rows={4}
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Detail key strengths, technical skills demonstrated, concerns, or next steps..."
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                background: '#090d16',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                color: '#f8fafc',
-                fontSize: '14px',
-                outline: 'none',
-                resize: 'vertical',
-                lineHeight: '1.5',
-              }}
-            />
-          </div>
-
-          {/* Footer Actions */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+          {/* Footer */}
+          <div className="zr-modal-footer">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: '10px 18px',
-                background: '#1e293b',
-                color: '#cbd5e1',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-              }}
+              className="zr-btn zr-btn-outline"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              style={{
-                padding: '10px 20px',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
-                opacity: submitting ? 0.7 : 1,
-                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-              }}
+              className="zr-btn zr-btn-primary"
+              style={{ opacity: submitting ? 0.65 : 1 }}
             >
-              {submitting ? 'Submitting...' : 'Save Feedback & Complete'}
+              {submitting ? 'Saving...' : 'Submit Evaluation'}
             </button>
           </div>
         </form>

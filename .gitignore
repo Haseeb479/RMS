@@ -7,3 +7,5 @@ dist
 .env.local
 .env.*.local
 .DS_Store
+backend/uploads/
+*.tsbuildinfo

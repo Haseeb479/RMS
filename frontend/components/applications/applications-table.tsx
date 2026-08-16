@@ -2,6 +2,7 @@
 
 import { ApplicationItem } from '@/lib/hooks/useapplications';
 import { STAGES_CONFIG } from './kanban-board';
+import Link from 'next/link';
 
 interface ApplicationsTableProps {
   applications: ApplicationItem[];
@@ -16,55 +17,27 @@ export default function ApplicationsTable({
 }: ApplicationsTableProps) {
   if (applications.length === 0) {
     return (
-      <div
-        style={{
-          background: '#0f172a',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '12px',
-          padding: '48px',
-          textAlign: 'center',
-          color: '#94a3b8',
-        }}
-      >
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#f8fafc', marginBottom: '4px' }}>
-          No applications found
-        </h3>
-        <p style={{ fontSize: '14px', margin: 0 }}>
-          Try clearing your filters or create a new application above.
-        </p>
+      <div className="zr-empty">
+        <div className="zr-empty-icon">📋</div>
+        <div className="zr-empty-title">No applications found</div>
+        <div className="zr-empty-desc">
+          Try clearing your search filters or click &quot;Add Application&quot; above to link a candidate to an opening.
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        background: '#0f172a',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
-      }}
-    >
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+    <div className="zr-card" style={{ overflow: 'hidden' }}>
+      <table className="zr-table">
         <thead>
-          <tr
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#94a3b8',
-              fontSize: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            <th style={{ padding: '16px 20px', fontWeight: '600' }}>Candidate</th>
-            <th style={{ padding: '16px 20px', fontWeight: '600' }}>Job Opening</th>
-            <th style={{ padding: '16px 20px', fontWeight: '600' }}>Stage</th>
-            <th style={{ padding: '16px 20px', fontWeight: '600' }}>Applied Date</th>
-            <th style={{ padding: '16px 20px', fontWeight: '600' }}>Match Score</th>
-            <th style={{ padding: '16px 20px', fontWeight: '600', textAlign: 'right' }}>Actions</th>
+          <tr>
+            <th>Candidate</th>
+            <th>Job Opening</th>
+            <th>Stage</th>
+            <th>Applied Date</th>
+            <th>Match Score</th>
+            <th style={{ textAlign: 'right' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -72,103 +45,109 @@ export default function ApplicationsTable({
             const stageConfig = STAGES_CONFIG.find((s) => s.id === app.status) || STAGES_CONFIG[0];
 
             return (
-              <tr
-                key={app.id}
-                style={{
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                  transition: 'background 0.15s ease',
-                }}
-              >
+              <tr key={app.id}>
                 {/* Candidate Info */}
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ fontWeight: '600', color: '#f8fafc' }}>
-                    {app.candidate?.firstName} {app.candidate?.lastName}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                <td>
+                  <Link href={`/candidates/${app.candidateId}`}>
+                    <span style={{ fontWeight: 600, color: 'var(--zr-blue)', cursor: 'pointer', fontSize: '13px' }}>
+                      {app.candidate?.firstName} {app.candidate?.lastName}
+                    </span>
+                  </Link>
+                  <div style={{ fontSize: '11px', color: 'var(--zr-muted)', marginTop: '2px' }}>
                     {app.candidate?.email}
                   </div>
                 </td>
 
                 {/* Job Title */}
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ fontWeight: '500', color: '#cbd5e1' }}>
-                    {app.job?.title || 'N/A'}
+                <td>
+                  <div style={{ fontWeight: '500', color: 'var(--zr-text)', fontSize: '13px' }}>
+                    {app.job?.title || 'General Position'}
                   </div>
                   {app.job?.location && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--zr-muted)', marginTop: '2px' }}>
                       📍 {app.job.location}
                     </div>
                   )}
                 </td>
 
-                {/* Stage Dropdown */}
-                <td style={{ padding: '16px 20px' }}>
+                {/* Stage dropdown */}
+                <td>
                   <select
                     value={app.status}
                     onChange={(e) => onMoveStage(app.id, e.target.value)}
                     style={{
-                      background: stageConfig.bgColor,
-                      border: `1px solid ${stageConfig.borderColor}`,
+                      padding: '4px 10px',
+                      borderRadius: '16px',
+                      fontSize: '11px',
+                      fontWeight: '700',
                       color: stageConfig.color,
-                      borderRadius: '20px',
-                      padding: '4px 12px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      outline: 'none',
+                      background: stageConfig.badgeBg,
+                      border: `1px solid ${stageConfig.borderColor}`,
                       cursor: 'pointer',
+                      outline: 'none',
                     }}
                   >
                     {STAGES_CONFIG.map((s) => (
-                      <option key={s.id} value={s.id} style={{ background: '#0f172a', color: '#f8fafc' }}>
+                      <option key={s.id} value={s.id} style={{ color: 'var(--zr-text)', background: 'var(--zr-white)' }}>
                         {s.icon} {s.label}
                       </option>
                     ))}
                   </select>
                 </td>
 
-                {/* Date */}
-                <td style={{ padding: '16px 20px', color: '#94a3b8' }}>
-                  {new Date(app.createdAt).toLocaleDateString()}
+                {/* Applied Date */}
+                <td style={{ color: 'var(--zr-text-2)', fontSize: '12px' }}>
+                  {new Date(app.createdAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
                 </td>
 
-                {/* Score */}
-                <td style={{ padding: '16px 20px' }}>
-                  {app.candidate?.score ? (
+                {/* Match Score */}
+                <td>
+                  {app.candidate?.score != null ? (
                     <span
                       style={{
-                        background: 'rgba(16, 185, 129, 0.15)',
-                        color: '#34d399',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '6px',
                         padding: '2px 8px',
-                        fontSize: '12px',
-                        fontWeight: '600',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        background:
+                          app.candidate.score >= 75
+                            ? 'var(--zr-success-light)'
+                            : app.candidate.score >= 50
+                            ? 'var(--zr-warning-light)'
+                            : 'var(--zr-danger-light)',
+                        color:
+                          app.candidate.score >= 75
+                            ? 'var(--zr-success)'
+                            : app.candidate.score >= 50
+                            ? 'var(--zr-warning)'
+                            : 'var(--zr-danger)',
                       }}
                     >
                       {app.candidate.score}% Match
                     </span>
                   ) : (
-                    <span style={{ color: '#64748b', fontSize: '12px' }}>N/A</span>
+                    <span style={{ fontSize: '11px', color: 'var(--zr-muted-light)' }}>—</span>
                   )}
                 </td>
 
-                {/* Actions */}
-                <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                  <button
-                    onClick={() => onDeleteApplication(app.id)}
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.25)',
-                      color: '#f87171',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Delete
-                  </button>
+                {/* Action Buttons */}
+                <td style={{ textAlign: 'right' }}>
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                    <Link href={`/candidates/${app.candidateId}`}>
+                      <button className="zr-btn zr-btn-outline zr-btn-xs">Profile</button>
+                    </Link>
+                    <button
+                      onClick={() => onDeleteApplication(app.id)}
+                      className="zr-btn zr-btn-danger-ghost zr-btn-xs"
+                      title="Remove application"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </td>
               </tr>
             );

@@ -51,7 +51,6 @@ export default function ScheduleInterviewModal({
       if (defaultCandidateId) setCandidateId(defaultCandidateId);
       if (defaultJobId) setJobId(defaultJobId);
 
-      // Default to tomorrow 10:00 AM
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(10, 0, 0, 0);
@@ -59,7 +58,7 @@ export default function ScheduleInterviewModal({
 
       setFormError(null);
     }
-  }, [isOpen, defaultCandidateId, defaultJobId]);
+  }, [isOpen, defaultCandidateId, defaultJobId, fetchCandidates, fetchJobs]);
 
   if (!isOpen) return null;
 
@@ -101,336 +100,197 @@ export default function ScheduleInterviewModal({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(3, 7, 18, 0.8)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-        padding: '20px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: 'linear-gradient(145deg, #0f172a, #1e293b)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '16px',
-          width: '100%',
-          maxWidth: '560px',
-          padding: '28px',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-          color: '#f8fafc',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="zr-modal-overlay" onClick={onClose}>
+      <div className="zr-modal" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className="zr-modal-header">
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#f8fafc', margin: 0 }}>
-              📅 Schedule Interview
-            </h2>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '4px', margin: 0 }}>
-              Set up a new candidate interview session
+            <div className="zr-modal-title">Schedule Interview Session</div>
+            <p style={{ fontSize: '12px', color: 'var(--zr-muted)', marginTop: '2px' }}>
+              Set up meeting details, duration, and interviewer assignments
             </p>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: 'transparent',
+              background: 'none',
               border: 'none',
-              color: '#94a3b8',
-              fontSize: '20px',
+              fontSize: '18px',
               cursor: 'pointer',
-              padding: '4px 8px',
+              color: 'var(--zr-muted)',
+              padding: '4px',
             }}
           >
             ✕
           </button>
         </div>
 
-        {formError && (
-          <div
-            style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              color: '#f87171',
-              fontSize: '13px',
-            }}
-          >
-            ⚠️ {formError}
-          </div>
-        )}
-
+        {/* Form Body */}
         <form onSubmit={handleSubmit}>
-          {/* Candidate Select */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-              Candidate *
-            </label>
-            <select
-              value={candidateId}
-              onChange={(e) => setCandidateId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: '#090d16',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                color: '#f8fafc',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            >
-              <option value="">-- Select Candidate --</option>
-              {candidates.map((c: any) => (
-                <option key={c.id} value={c.id}>
-                  {c.firstName} {c.lastName} ({c.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Job Select */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-              Job Position (Optional)
-            </label>
-            <select
-              value={jobId}
-              onChange={(e) => setJobId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: '#090d16',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                color: '#f8fafc',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            >
-              <option value="">-- Select Job (Optional) --</option>
-              {jobs.map((j: any) => (
-                <option key={j.id} value={j.id}>
-                  {j.title} {j.location ? `(${j.location})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Title & Type Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Interview Title *
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Technical Round 1"
+          <div className="zr-modal-body">
+            {formError && (
+              <div
                 style={{
-                  width: '100%',
+                  background: 'var(--zr-danger-light)',
+                  border: '1px solid var(--zr-danger)',
+                  borderRadius: '7px',
                   padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Interview Type
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
+                  marginBottom: '16px',
+                  color: 'var(--zr-danger)',
+                  fontSize: '13px',
                 }}
               >
-                {INTERVIEW_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                ⚠ {formError}
+              </div>
+            )}
+
+            {/* Candidate & Job row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="zr-form-group">
+                <label className="zr-label">Candidate *</label>
+                <select
+                  value={candidateId}
+                  onChange={(e) => setCandidateId(e.target.value)}
+                  required
+                  className="zr-input"
+                >
+                  <option value="">Select candidate...</option>
+                  {candidates.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="zr-form-group">
+                <label className="zr-label">Job Opening (Optional)</label>
+                <select
+                  value={jobId}
+                  onChange={(e) => setJobId(e.target.value)}
+                  className="zr-input"
+                >
+                  <option value="">Select job...</option>
+                  {jobs.map((j) => (
+                    <option key={j.id} value={j.id}>
+                      {j.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* Date/Time & Duration */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Date & Time *
-              </label>
-              <input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              />
+            {/* Title & Type row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '14px' }}>
+              <div className="zr-form-group">
+                <label className="zr-label">Interview Title *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Technical Round 1"
+                  required
+                  className="zr-input"
+                />
+              </div>
+
+              <div className="zr-form-group">
+                <label className="zr-label">Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="zr-input"
+                >
+                  {INTERVIEW_TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Duration (minutes)
-              </label>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              >
-                <option value={30}>30 mins</option>
-                <option value={45}>45 mins</option>
-                <option value={60}>60 mins (1 hr)</option>
-                <option value={90}>90 mins (1.5 hrs)</option>
-              </select>
+            {/* Date/Time & Duration */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '14px' }}>
+              <div className="zr-form-group">
+                <label className="zr-label">Scheduled Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  required
+                  className="zr-input"
+                />
+              </div>
+
+              <div className="zr-form-group">
+                <label className="zr-label">Duration (Minutes)</label>
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="zr-input"
+                >
+                  <option value={15}>15 mins</option>
+                  <option value={30}>30 mins</option>
+                  <option value={45}>45 mins</option>
+                  <option value={60}>60 mins (1 hr)</option>
+                  <option value={90}>90 mins (1.5 hrs)</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* Location / Meeting Link */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-              Meeting Link / Location
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Google Meet link or Room 402"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                background: '#090d16',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                color: '#f8fafc',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          {/* Interviewer Info Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Interviewer Name
-              </label>
+            {/* Location / Meeting URL */}
+            <div className="zr-form-group">
+              <label className="zr-label">Meeting URL or Location</label>
               <input
                 type="text"
-                value={interviewerName}
-                onChange={(e) => setInterviewerName(e.target.value)}
-                placeholder="e.g. Sarah Jenkins"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. https://meet.google.com/xyz or Office Room A"
+                className="zr-input"
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>
-                Interviewer Email
-              </label>
-              <input
-                type="email"
-                value={interviewerEmail}
-                onChange={(e) => setInterviewerEmail(e.target.value)}
-                placeholder="e.g. sarah@company.com"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  background: '#090d16',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '8px',
-                  color: '#f8fafc',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
-              />
+            {/* Interviewer Info row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: 0 }}>
+              <div className="zr-form-group" style={{ marginBottom: 0 }}>
+                <label className="zr-label">Interviewer Name</label>
+                <input
+                  type="text"
+                  value={interviewerName}
+                  onChange={(e) => setInterviewerName(e.target.value)}
+                  placeholder="e.g. Sarah Connor"
+                  className="zr-input"
+                />
+              </div>
+
+              <div className="zr-form-group" style={{ marginBottom: 0 }}>
+                <label className="zr-label">Interviewer Email</label>
+                <input
+                  type="email"
+                  value={interviewerEmail}
+                  onChange={(e) => setInterviewerEmail(e.target.value)}
+                  placeholder="e.g. sarah@company.com"
+                  className="zr-input"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+          {/* Footer */}
+          <div className="zr-modal-footer">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: '10px 18px',
-                background: '#1e293b',
-                color: '#cbd5e1',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-              }}
+              className="zr-btn zr-btn-outline"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              style={{
-                padding: '10px 20px',
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
-                opacity: submitting ? 0.7 : 1,
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-              }}
+              className="zr-btn zr-btn-primary"
+              style={{ opacity: submitting ? 0.65 : 1 }}
             >
               {submitting ? 'Scheduling...' : 'Schedule Interview'}
             </button>

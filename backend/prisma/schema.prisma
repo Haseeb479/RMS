@@ -17,11 +17,31 @@ model Company {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users      User[]
-  jobs       Job[]
-  candidates Candidate[]
-  resumes    Resume[]
-  interviews Interview[]
+  // Career Site Customizer Settings
+  careerHeadline  String?  @default("Build the future with us")
+  careerSubtitle  String?  @default("Explore open opportunities and grow your career with our team")
+  careerBanner    String?
+  careerColor     String?  @default("#E8652A")
+  careerPerks     String?  @db.Text
+  socialLinks     String?  @db.Text
+
+  // Payroll / HRIS Integration
+  payrollWebhookSecret String? @default(cuid())
+
+  users           User[]
+  jobs            Job[]
+  candidates      Candidate[]
+  resumes         Resume[]
+  interviews      Interview[]
+  auditLogs       AuditLog[]
+  offerLetters    OfferLetter[]
+  workflowRules   WorkflowRule[]
+  inboundResumes  InboundResume[]
+  tasks           Task[]
+  teamInvites     TeamInvite[]
+  employees       Employee[]
+  departureEvents PayrollDepartureEvent[]
+  notifications   Notification[]
 }
 
 model User {
@@ -29,7 +49,7 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  role      String   @default("recruiter")
+  role      String   @default("recruiter") // admin | recruiter | hiring_manager | interviewer
   companyId String
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -38,6 +58,7 @@ model User {
 
 model Job {
   id           String   @id @default(cuid())
+  jobCode      Int      @default(autoincrement()) @unique
   title        String
   description  String
   location     String?
@@ -50,8 +71,11 @@ model Job {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  applications Application[]
-  interviews   Interview[]
+  applications   Application[]
+  interviews     Interview[]
+  questions      ScreeningQuestion[]
+  offerLetters   OfferLetter[]
+  inboundResumes InboundResume[]
 }
 
 model Candidate {
@@ -63,6 +87,7 @@ model Candidate {
   location    String?
   resume      String?  // File path
   skills      String?  // JSON string of skills array
+  tags        String?  // JSON string of tag labels array
   experience  Int?     // Years of experience
   salary      Int?     // Expected salary
   notes       String?
@@ -75,27 +100,121 @@ model Candidate {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  applications Application[]
-  resumes      Resume[]
-  interviews   Interview[]
+  applications    Application[]
+  resumes         Resume[]
+  interviews      Interview[]
+  offerLetters    OfferLetter[]
+  inboundResumes  InboundResume[]
+  activityNotes   CandidateNote[]
 }
 
 model Application {
-  id          String    @id @default(cuid())
-  jobId       String
-  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  candidateId String
-  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  status      String    @default("applied")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  jobId          String
+  job            Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidateId    String
+  candidate      Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  status         String    @default("applied")
+  privacyConsent Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  interviews  Interview[]
+  interviews   Interview[]
+  answers      CandidateAnswer[]
+  offerLetters OfferLetter[]
 
   @@unique([jobId, candidateId])
   @@index([jobId])
   @@index([candidateId])
   @@index([status])
+}
+
+model ScreeningQuestion {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  question    String
+  type        String   @default("text") // text | single_choice | boolean | number
+  options     String?  // JSON string of choices array
+  isRequired  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  answers     CandidateAnswer[]
+
+  @@index([jobId])
+}
+
+model CandidateAnswer {
+  id                 String            @id @default(cuid())
+  applicationId      String
+  application        Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  questionId         String
+  screeningQuestion  ScreeningQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer             String            @db.Text
+  createdAt          DateTime          @default(now())
+
+  @@index([applicationId])
+  @@index([questionId])
+}
+
+model OfferLetter {
+  id             String       @id @default(cuid())
+  companyId      String
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  candidateId    String
+  candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId          String?
+  job            Job?         @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  applicationId  String?
+  application    Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  
+  title          String       // e.g. "Senior Software Engineer Offer Letter"
+  salary         String       // e.g. "$120,000 / year"
+  startDate      DateTime
+  content        String       @db.Text
+  status         String       @default("sent") // draft | sent | accepted | declined
+  token          String       @unique // Unique secret slug for public offer URL
+  candidateNotes String?      @db.Text
+  signedAt       DateTime?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([status])
+}
+
+model WorkflowRule {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  stage           String   // e.g. "shortlisted", "interview", "offer", "rejected"
+  action          String   // e.g. "SEND_EMAIL", "NOTIFY_HIRING_MANAGER"
+  templateSubject String?
+  templateBody    String?  @db.Text
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([stage])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String?
+  action    String   // e.g. "APPLICATION_SUBMITTED", "OFFER_ACCEPTED", "WORKFLOW_TRIGGERED"
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([createdAt])
 }
 
 model Resume {
@@ -158,4 +277,203 @@ model Interview {
   @@index([jobId])
   @@index([status])
   @@index([scheduledAt])
+}
+
+model InboundResume {
+  id               String      @id @default(cuid())
+  companyId        String
+  company          Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  senderEmail      String
+  senderName       String?
+  subject          String?
+  source           String      @default("email_inbox") // email_inbox | webhook | manual_import
+  status           String      @default("pending")     // pending | processed | archived
+  
+  fileName         String
+  filePath         String
+  fileSize         Int
+  mimeType         String
+  extractedText    String?     @db.Text
+  
+  parsedName       String?
+  parsedEmail      String?
+  parsedPhone      String?
+  parsedSkills     String?     // JSON string array
+  parsedExperience Int?
+  
+  // Advance ATS Scoring Engine
+  atsScore         Float?      // 0 - 100%
+  atsMatchDetails  String?     @db.Text // JSON breakdown (skillsMatch, missing, tier)
+  atsMatchedJobId  String?
+  
+  assignedJobId    String?
+  assignedJob      Job?        @relation(fields: [assignedJobId], references: [id], onDelete: SetNull)
+  candidateId      String?
+  candidate        Candidate?  @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+}
+
+model CandidateNote {
+  id          String    @id @default(cuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  companyId   String
+  authorName  String    @default("Recruiter")
+  content     String    @db.Text
+  type        String    @default("note") // note | status_change | email_sent | interview_scheduled
+  createdAt   DateTime  @default(now())
+
+  @@index([candidateId])
+  @@index([companyId])
+}
+
+model Task {
+  id            String   @id @default(cuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?  @db.Text
+  status        String   @default("todo")     // todo | in_progress | done | cancelled
+  priority      String   @default("medium")   // low | medium | high | urgent
+  dueDate       DateTime?
+
+  assignedTo    String?  // User name (denormalized for simplicity)
+  assignedEmail String?
+  createdBy     String?  // User name
+
+  // Optional links
+  candidateId   String?
+  jobId         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@index([assignedEmail])
+}
+
+model TeamInvite {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  email       String
+  name        String?
+  role        String   @default("recruiter") // admin | recruiter | hiring_manager | interviewer
+  token       String   @unique               // Invite link token
+  status      String   @default("pending")   // pending | accepted | expired
+  invitedBy   String?
+
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([email])
+  @@index([token])
+}
+
+model Employee {
+  id                String    @id @default(cuid())
+  companyId         String
+  company           Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  employeeCode      String    // e.g. "EMP-102"
+  firstName         String
+  lastName          String
+  email             String
+  phone             String?
+  department        String    // e.g. "Engineering", "Sales", "Marketing", "Product", "HR", "Finance"
+  designation       String    // e.g. "Senior Backend Engineer"
+  level             String    @default("mid") // junior | mid | senior | lead | director | vp
+  skills            String?   // JSON array of strings e.g. ["Node.js", "PostgreSQL", "AWS"]
+  experienceYears   Int       @default(1)
+  salary            Int?      // Annual compensation in USD/local currency
+  performanceRating Float     @default(4.0) // 1.0 - 5.0 scale
+
+  status            String    @default("active") // active | promoted | offboarded | on_leave
+  hireDate          DateTime  @default(now())
+  exitDate          DateTime?
+  exitReason        String?   // Resignation, Relocation, Career Transition, etc.
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  departureEvents   PayrollDepartureEvent[]
+
+  @@unique([companyId, employeeCode])
+  @@index([companyId])
+  @@index([department])
+  @@index([status])
+}
+
+model PayrollDepartureEvent {
+  id                   String    @id @default(cuid())
+  companyId            String
+  company              Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  employeeId           String?
+  employee             Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  employeeName         String
+  employeeEmail        String?
+  department           String
+  designation          String
+  level                String    @default("senior")
+  salary               Int?
+  departureDate        DateTime  @default(now())
+  departureReason      String?   // e.g. "Resignation / Relocation"
+  source               String    @default("payroll_webhook") // payroll_webhook | manual_trigger | zoho_payroll | gusto
+
+  // Status of the vacancy decision
+  status               String    @default("pending_action") // pending_action | promoted_internally | requisition_created | dismissed
+
+  // AI Matching Output Report (JSON array of evaluated internal candidates)
+  suggestedSuccessors  String?   @db.Text 
+
+  // If promoted internally
+  selectedSuccessorId  String?
+  promotedEmployeeName String?
+
+  // If external job requisition created
+  createdJobId         String?
+
+  // If this event was triggered because of a cascading vacancy from a previous promotion
+  isCascadingVacancy   Boolean   @default(false)
+  cascadedFromRole     String?
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+  @@index([department])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title       String
+  message     String   @db.Text
+  type        String   @default("general") // high_ats_match | payroll_departure | inbound_resume | offer_signed | interview_alert | general
+  link        String?  // Direct URL to navigate on click
+  isRead      Boolean  @default(false)
+  meta        String?  @db.Text // JSON metadata
+
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
 }
